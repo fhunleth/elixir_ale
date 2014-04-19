@@ -205,22 +205,24 @@ void gpio_handle_request(ETERM *emsg, void *cookie)
     debug("gpio_request_handler: %s\n", ERL_ATOM_PTR(cmd));
 
     ETERM *resp;
-    if (strcmp(ERL_ATOM_PTR(cmd), "ping") == 0) {
-	debug("Pong!!!\n");
-	resp = erl_format("pong");
-    } else if (strcmp(ERL_ATOM_PTR(cmd), "add") == 0) {
-	ETERM *number1 = erl_hd(args);
-	ETERM *number2 = erl_hd(erl_tl(args));
-	if (number1 == NULL ||
-	    number2 == NULL)
-	    errx(EXIT_FAILURE, "add: didn't get 2 arguments");
+    if (strcmp(ERL_ATOM_PTR(cmd), "read") == 0) {
+	int value = gpio_read(pin);
+	if (value !=-1)
+	    resp = erl_format("~i", value);
+	else
+	    resp = erl_format("{error, gpio_read_failed}");
+    } else if (strcmp(ERL_ATOM_PTR(cmd), "write") == 0) {
+	ETERM *evalue = erl_hd(args);
+	if (evalue == NULL)
+	    errx(EXIT_FAILURE, "write: didn't get value to write");
 
-	int x = ERL_INT_VALUE(number1);
-	int y = ERL_INT_VALUE(number2);
+	int value = ERL_INT_VALUE(evalue);
 
-	debug("Adding %d + %d\n", x, y);
-
-	resp = erl_mk_int(x + y);
+	if(gpio_write(pin, value))
+	    resp = erl_format("ok");
+	else
+	    resp = erl_format("{error, gpio_write_failed}");
+	erl_free_term(evalue);
     } else {
 	resp = erl_format("error");
     }

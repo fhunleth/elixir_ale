@@ -24,13 +24,14 @@ defmodule Gpio do
   end
 
   # gen_server callbacks
-  def init(pin, pin_direction) do
-    executable = :code.priv_dir(:elixirport) ++ '/gpio_port'
+  def init([pin, pin_direction]) do
+    executable = :code.priv_dir(:elixir_ale) ++ '/gpio_port'
     port = Port.open({:spawn_executable, executable},
 										 [{:args, ["#{pin}", atom_to_binary(pin_direction)]},
 											{:packet, 2},
 											:use_stdio,
-											:binary])
+											:binary,
+										  :exit_status])
     state = State.new(port: port)
     { :ok, state }
   end
