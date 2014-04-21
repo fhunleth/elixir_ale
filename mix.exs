@@ -12,7 +12,7 @@ defmodule ElixirAle.Mixfile do
   def project do
     [ app: :elixir_ale,
       version: "0.0.1",
-      elixir: "~> 0.12.5",
+      elixir: ">= 0.12.5",
       compilers: [:ElixirAle, :elixir, :app],
       deps: deps ]
   end
