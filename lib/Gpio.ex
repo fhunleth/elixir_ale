@@ -8,7 +8,7 @@ defmodule Gpio do
     :gen_server.start_link({:local, server_name(pin)}, __MODULE__, [pin, pin_direction], [])
   end
 
-	@doc """
+  @doc """
   Free the resources associated with pin.
   """
   def release(pin) do
@@ -27,11 +27,11 @@ defmodule Gpio do
   def init([pin, pin_direction]) do
     executable = :code.priv_dir(:elixir_ale) ++ '/gpio_port'
     port = Port.open({:spawn_executable, executable},
-										 [{:args, ["#{pin}", atom_to_binary(pin_direction)]},
-											{:packet, 2},
-											:use_stdio,
-											:binary,
-										  :exit_status])
+                     [{:args, ["#{pin}", atom_to_binary(pin_direction)]},
+                      {:packet, 2},
+                      :use_stdio,
+                      :binary,
+                      :exit_status])
     state = State.new(port: port)
     { :ok, state }
   end
@@ -51,9 +51,9 @@ defmodule Gpio do
   end
 
   # Private helper functions
-	defp server_name(pin) do
-		Module.concat(__MODULE__, "#{pin}")
-	end
+  defp server_name(pin) do
+    Module.concat(__MODULE__, "#{pin}")
+  end
 
   defp call_port(state, command, arguments) do
     msg = {command, arguments}
