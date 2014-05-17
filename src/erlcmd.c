@@ -68,7 +68,7 @@ void erlcmd_send(ETERM *response)
  * @brief Dispatch commands in the buffer
  * @return the number of bytes processed
  */
-static ssize_t erlcmd_try_dispatch(struct erlcmd *handler)
+static size_t erlcmd_try_dispatch(struct erlcmd *handler)
 {
     /* Check for length field */
     if (handler->index < sizeof(uint16_t))
@@ -76,7 +76,7 @@ static ssize_t erlcmd_try_dispatch(struct erlcmd *handler)
 
     uint16_t be_len;
     memcpy(&be_len, handler->buffer, sizeof(uint16_t));
-    ssize_t msglen = ntohs(be_len);
+    size_t msglen = ntohs(be_len);
     if (msglen + sizeof(uint16_t) > sizeof(handler->buffer))
 	errx(EXIT_FAILURE, "Message too long");
 
@@ -115,7 +115,7 @@ void erlcmd_process(struct erlcmd *handler)
 
     handler->index += amount_read;
     for (;;) {
-	ssize_t bytes_processed = erlcmd_try_dispatch(handler);
+	size_t bytes_processed = erlcmd_try_dispatch(handler);
 
 	if (bytes_processed == 0) {
 	    /* Only have part of the command to process. */

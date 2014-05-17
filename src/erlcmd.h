@@ -21,7 +21,7 @@
 struct erlcmd
 {
     unsigned char buffer[ERLCMD_BUF_SIZE];
-    ssize_t index;
+    size_t index;
 
     void (*request_handler)(ETERM *emsg, void *cookie);
     void *cookie;
