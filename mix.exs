@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Compile.ElixirAle do
   @shortdoc "Compiles gpio_port"
 
   def run(_) do
-    Mix.shell.info System.cmd("make priv/gpio_port")
+    Mix.shell.info System.cmd("make priv/gpio_port priv/i2c_port priv/spi_port")
   end
 end
 

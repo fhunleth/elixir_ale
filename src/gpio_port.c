@@ -1,3 +1,25 @@
+/*
+ *  Copyright 2014 Frank Hunleth
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * GPIO port implementation.
+ *
+ * This code has been heavily modified from Erlang/ALE.
+ * Copyright (C) 2013 Erlang Solutions Ltd.
+ * See http://opensource.erlang-solutions.com/erlang_ale/.
+ */
+
 #include <err.h>
 #include <poll.h>
 #include <stdio.h>
@@ -212,7 +234,7 @@ void gpio_handle_request(ETERM *emsg, void *cookie)
     if (strcmp(ERL_ATOM_PTR(cmd), "read") == 0) {
         int value = gpio_read(pin);
         if (value !=-1)
-            resp = erl_format("~i", value);
+            resp = erl_mk_int(value);
         else
             resp = erl_format("{error, gpio_read_failed}");
     } else if (strcmp(ERL_ATOM_PTR(cmd), "write") == 0) {

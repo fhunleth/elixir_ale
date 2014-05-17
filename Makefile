@@ -34,6 +34,14 @@ priv/gpio_port: src/gpio_port.o src/erlcmd.o
 	@mkdir -p priv
 	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
 
+priv/i2c_port: src/i2c_port.o src/erlcmd.o
+	@mkdir -p priv
+	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
+
+priv/spi_port: src/spi_port.o src/erlcmd.o
+	@mkdir -p priv
+	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
+
 clean:
 	$(MIX) clean
 	rm -f priv/gpio_port src/*.o
