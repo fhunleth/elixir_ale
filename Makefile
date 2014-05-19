@@ -44,4 +44,4 @@ priv/spi_port: src/spi_port.o src/erlcmd.o
 
 clean:
 	$(MIX) clean
-	rm -f priv/gpio_port src/*.o
+	rm -f priv/gpio_port priv/i2c_port priv/spi_port src/*.o
