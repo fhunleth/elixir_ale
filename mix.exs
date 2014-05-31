@@ -3,13 +3,7 @@ Code.ensure_loaded?(Hex) and Hex.start
 defmodule Mix.Tasks.Compile.ElixirAle do
   @shortdoc "Compiles elixir_ale port binaries"
   def run(_) do
-    File.rm("priv/gpio_port")
-    File.rm("priv/i2c_port")
-    File.rm("priv/spi_port")
-    Mix.shell.info System.cmd("make priv/gpio_port priv/i2c_port priv/spi_port")
-    if !File.exists?("priv/gpio_port") || !File.exists?("priv/i2c_port") || !File.exists?("priv/spi_port") do
-        raise Mix.Error, message: "error making elixir_ale port executables"
-    end
+    0=Mix.Shell.IO.cmd("make priv/gpio_port priv/i2c_port priv/spi_port")
   end
 end
 
