@@ -1,23 +1,47 @@
 defmodule I2c do
   use GenServer
 
+  @moduledoc """
+  This module allows Elixir code to communicate with devices on an I2C bus.
+  """
+
   defmodule State do
     defstruct port: nil, devname: nil
   end
 
   # Public API
+  @doc """
+  Start and link the I2c GenServer.
+
+  `devname` should be the I2C bus name (e.g. "i2c-1")
+  `address` should be the device's 7-bit address on the I2C bus.
+
+  Note that the address parameter can be confusing when reading a datasheet since
+  sometimes the datasheet specifies the 8-bit address where the least
+  significant bit indicates read/write. This address refers to the upper
+  7-bits that don't change between reads and writes.
+  """
   def start_link(devname, address) do
     GenServer.start_link(__MODULE__, [devname, address])
   end
 
+  @doc """
+  Stop the GenServer and release all resources.
+  """
   def release(pid) do
     GenServer.cast pid, :release
   end
 
+  @doc """
+  Initiate a read transaction on the I2C bus of `count` bytes.
+  """
   def read(pid, count) do
     GenServer.call pid, {:read, count}
   end
 
+  @doc """
+  Write the specified `data` to the device.
+  """
   def write(pid, data) do
     GenServer.call pid, {:write, data}
   end

@@ -1,30 +1,52 @@
 defmodule Gpio do
- use GenServer
+  use GenServer
 
+  @moduledoc """
+  This is an Elixir interface to Linux GPIOs. Each GPIO is an
+  independent GenServer.
+  """
   defmodule State do
     defstruct port: nil, pin: 0, direction: nil, callbacks: []
   end
 
   # Public API
+  @doc """
+  Start and link a new GPIO GenServer. `pin` should be a valid
+  GPIO pin number on the system and `pin_direction` should be
+  `:input` or `:output`.
+  """
   def start_link(pin, pin_direction) do
     GenServer.start_link(__MODULE__, [pin, pin_direction])
   end
 
   @doc """
-  Free the resources associated with pin.
+  Free the resources associated with pin and stop the GenServer.
   """
   def release(pid) do
     GenServer.cast pid, :release
   end
 
+  @doc """
+  Write the specified value to the GPIO. The GPIO should be configured
+  as an output. Valid values are 0 for logic low and 1 for logic high.
+  Other non-zero values will result in logic high being output.
+  """
   def write(pid, value) when is_integer(value) do
     GenServer.call pid, {:write, value}
   end
 
+  @doc """
+  Read the current value of the pin.
+  """
   def read(pid) do
     GenServer.call pid, :read
   end
 
+  @doc """
+  Turn on "interrupts" on the input pin. The pin can be monitored for
+  `:rising` transitions, `:falling` transitions, or `:both`. The process
+  that calls this method will receive the messages.
+  """
   def set_int(pid, direction) do
     true = pin_interrupt_condition?(direction)
     GenServer.call pid, {:set_int, direction, self}
@@ -99,5 +121,4 @@ defmodule Gpio do
       [item | list]
     end
   end
-
 end
