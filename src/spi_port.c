@@ -149,7 +149,8 @@ static void spi_handle_request(const char *req, void *cookie)
                 len < 1 ||
                 len > SPI_TRANSFER_MAX ||
                 ei_decode_binary(resp, &resp_index, &data, &llen) < 0)
-            errx(EXIT_FAILURE, "transfer: need a binary between 1 and %d bytes", SPI_TRANSFER_MAX);
+            errx(EXIT_FAILURE, "transfer: need a binary between 1 and %d bytes (%d, %d)", SPI_TRANSFER_MAX,
+                    type, len);
 
         char rxbuffer[SPI_TRANSFER_MAX];
 
