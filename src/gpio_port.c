@@ -34,7 +34,7 @@
 
 //#define DEBUG
 #ifdef DEBUG
-#define debug(...) fprintf(stderr, __VA_ARGS__)
+#define debug(...) do { fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\r\n"); } while(0)
 #else
 #define debug(...)
 #endif
@@ -206,67 +206,77 @@ void gpio_process(struct gpio *pin)
 {
     int value = gpio_read(pin);
 
-    ETERM *resp;
-    if (value)
-        resp = erl_format("{gpio_interrupt, rising}");
-    else
-        resp = erl_format("{gpio_interrupt, falling}");
-
-    erlcmd_send(resp);
-    erl_free_term(resp);
+    char resp[256];
+    int resp_index = sizeof(uint16_t); // Space for payload size
+    ei_encode_version(resp, &resp_index);
+    ei_encode_tuple_header(resp, &resp_index, 2);
+    ei_encode_atom(resp, &resp_index, "gpio_interrupt");
+    ei_encode_atom(resp, &resp_index, value ? "rising" : "falling");
+    erlcmd_send(resp, resp_index);
 }
 
-void gpio_handle_request(ETERM *emsg, void *cookie)
+void gpio_handle_request(const char *req, void *cookie)
 {
     struct gpio *pin = (struct gpio *) cookie;
 
     // Commands are of the form {Command, Arguments}:
-    // { atom(), [term()] }
+    // { atom(), term() }
+    int req_index = sizeof(uint16_t);
+    if (ei_decode_version(req, &req_index, NULL) < 0)
+        errx(EXIT_FAILURE, "Message version issue?");
 
-    ETERM *cmd = erl_element(1, emsg);
-    ETERM *args = erl_element(2, emsg);
-    if (cmd == NULL || args == NULL)
-        errx(EXIT_FAILURE, "Expecting { cmd, args }");
+    int arity;
+    if (ei_decode_tuple_header(req, &req_index, &arity) < 0 ||
+            arity != 2)
+        errx(EXIT_FAILURE, "expecting {cmd, args} tuple");
 
-    debug("gpio_request_handler: %s\n", ERL_ATOM_PTR(cmd));
+    char cmd[MAXATOMLEN];
+    if (ei_decode_atom(req, &req_index, cmd) < 0)
+        errx(EXIT_FAILURE, "expecting command atom");
 
-    ETERM *resp;
-    if (strcmp(ERL_ATOM_PTR(cmd), "read") == 0) {
+    char resp[256];
+    int resp_index = sizeof(uint16_t); // Space for payload size
+    ei_encode_version(resp, &resp_index);
+    if (strcmp(cmd, "read") == 0) {
+        debug("read");
         int value = gpio_read(pin);
         if (value !=-1)
-            resp = erl_mk_int(value);
-        else
-            resp = erl_format("{error, gpio_read_failed}");
-    } else if (strcmp(ERL_ATOM_PTR(cmd), "write") == 0) {
-        ETERM *evalue = erl_hd(args);
-        if (evalue == NULL)
+            ei_encode_long(resp, &resp_index, value);
+        else {
+            ei_encode_tuple_header(resp, &resp_index, 2);
+            ei_encode_atom(resp, &resp_index, "error");
+            ei_encode_atom(resp, &resp_index, "gpio_read_failed");
+        }
+    } else if (strcmp(cmd, "write") == 0) {
+        long value;
+        if (ei_decode_long(req, &req_index, &value) < 0)
             errx(EXIT_FAILURE, "write: didn't get value to write");
-
-        int value = ERL_INT_VALUE(evalue);
-
+        debug("write %d", value);
         if (gpio_write(pin, value))
-            resp = erl_format("ok");
-        else
-            resp = erl_format("{error, gpio_write_failed}");
-        erl_free_term(evalue);
-    } else if (strcmp(ERL_ATOM_PTR(cmd), "set_int") == 0) {
-        ETERM *evalue = erl_hd(args);
-        if (evalue == NULL)
+            ei_encode_atom(resp, &resp_index, "ok");
+        else {
+            ei_encode_tuple_header(resp, &resp_index, 2);
+            ei_encode_atom(resp, &resp_index, "error");
+            ei_encode_atom(resp, &resp_index, "gpio_write_failed");
+        }
+    } else if (strcmp(cmd, "set_int") == 0) {
+        char mode[32];
+        if (ei_decode_atom(req, &req_index, mode) < 0)
             errx(EXIT_FAILURE, "set_int: didn't get value");
+        debug("write %s", mode);
 
-        if (gpio_set_int(pin, ERL_ATOM_PTR(evalue)))
-            resp = erl_format("ok");
-        else
-            resp = erl_format("{error, gpio_set_int_failed}");
-        erl_free_term(evalue);
-    } else {
-        resp = erl_format("error");
-    }
-    erlcmd_send(resp);
+        if (gpio_set_int(pin, mode))
+            ei_encode_atom(resp, &resp_index, "ok");
+        else {
+            ei_encode_tuple_header(resp, &resp_index, 2);
+            ei_encode_atom(resp, &resp_index, "error");
+            ei_encode_atom(resp, &resp_index, "gpio_set_int_failed");
+        }
+    } else
+        errx(EXIT_FAILURE, "unknown command: %s", cmd);
 
-    erl_free_term(resp);
-    erl_free_term(cmd);
-    erl_free_term(args);
+    debug("sending response: %d bytes", resp_index);
+    erlcmd_send(resp, resp_index);
 }
 
 int main(int argc, char *argv[])

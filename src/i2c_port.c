@@ -37,7 +37,7 @@
 
 //#define DEBUG
 #ifdef DEBUG
-#define debug(...) fprintf(stderr, __VA_ARGS__)
+#define debug(...) do { fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\r\n"); } while(0)
 #else
 #define debug(...)
 #endif
@@ -72,7 +72,7 @@ static void i2c_init(struct i2c_info *i2c, const char *devpath, unsigned int add
  *
  * @return 	1 for success, 0 for failure
  */
-static int i2c_write(struct i2c_info *i2c, unsigned char *data, unsigned int len)
+static int i2c_write(struct i2c_info *i2c, char *data, unsigned int len)
 {
     if (write(i2c->fd, data, len) != len) {
         warn("I2C write (address: 0x%X) of %d bytes failed", i2c->addr, len);
@@ -99,55 +99,70 @@ static int i2c_read(struct i2c_info *i2c, char *data, unsigned int len)
     return 1;
 }
 
-static void i2c_handle_request(ETERM *emsg, void *cookie)
+static void i2c_handle_request(const char *req, void *cookie)
 {
     struct i2c_info *i2c = (struct i2c_info *) cookie;
 
     // Commands are of the form {Command, Arguments}:
-    // { atom(), [term()] }
+    // { atom(), term() }
+    int req_index = sizeof(uint16_t);
+    if (ei_decode_version(req, &req_index, NULL) < 0)
+        errx(EXIT_FAILURE, "Message version issue?");
 
-    ETERM *cmd = erl_element(1, emsg);
-    ETERM *args = erl_element(2, emsg);
-    if (cmd == NULL || args == NULL)
-        errx(EXIT_FAILURE, "Expecting { cmd, args }");
+    int arity;
+    if (ei_decode_tuple_header(req, &req_index, &arity) < 0 ||
+            arity != 2)
+        errx(EXIT_FAILURE, "expecting {cmd, args} tuple");
 
-    debug("i2c_request_handler: %s\n", ERL_ATOM_PTR(cmd));
+    char cmd[MAXATOMLEN];
+    if (ei_decode_atom(req, &req_index, cmd) < 0)
+        errx(EXIT_FAILURE, "expecting command atom");
 
-    ETERM *resp;
-    if (strcmp(ERL_ATOM_PTR(cmd), "read") == 0) {
-        ETERM *elen = erl_hd(args);
-        int len = ERL_INT_VALUE(elen);
-        if (len > I2C_SMBUS_BLOCK_MAX)
-            errx(EXIT_FAILURE, "Can't get more than %d bytes at time: %d", I2C_SMBUS_BLOCK_MAX, len);
+    char resp[256];
+    int resp_index = sizeof(uint16_t); // Space for payload size
+    ei_encode_version(resp, &resp_index);
+    if (strcmp(cmd, "read") == 0) {
+        long int len;
+        if (ei_decode_long(req, &req_index, &len) < 0 ||
+                len < 1 ||
+                len > I2C_SMBUS_BLOCK_MAX)
+            errx(EXIT_FAILURE, "read amount: min=1, max=%d", I2C_SMBUS_BLOCK_MAX);
 
-        char data[len];
+        char data[I2C_SMBUS_BLOCK_MAX];
 
         // calls the i2c_read function and returns an erlang tuple with data
         if (i2c_read(i2c, data, len))
-            resp = erl_mk_binary(data, len);
-        else
-            resp = erl_format("{error, i2c_read_failed}");
-    } else if (strcmp(ERL_ATOM_PTR(cmd), "write") == 0) {
-        ETERM *edata = erl_hd(args);
-        if (edata == NULL)
-            errx(EXIT_FAILURE, "write: didn't get value to write");
+            ei_encode_binary(resp, &resp_index, data,len);
+        else {
+            ei_encode_tuple_header(resp, &resp_index, 2);
+            ei_encode_atom(resp, &resp_index, "error");
+            ei_encode_atom(resp, &resp_index, "i2c_read_failed");
+        }
+    } else if (strcmp(cmd, "write") == 0) {
+        char data[I2C_SMBUS_BLOCK_MAX];
+        int len;
+        int type;
+        long llen;
+        if (ei_get_type(resp, &resp_index, &type, &len) < 0 ||
+                type != ERL_BINARY_EXT ||
+                len < 1 ||
+                len > I2C_SMBUS_BLOCK_MAX ||
+                ei_decode_binary(resp, &resp_index, &data, &llen) < 0)
+            errx(EXIT_FAILURE, "write: need a binary between 1 and %d bytes", I2C_SMBUS_BLOCK_MAX);
 
         // calls the i2c_write function and returns 1 if success or -1 if fails
-        if (i2c_write(i2c,
-                      ERL_BIN_PTR(edata),
-                      ERL_BIN_SIZE(edata)))
-            resp = erl_format("ok");
-        else
-            resp = erl_format("{error, i2c_write_failed}");
-        erl_free_term(edata);
-    } else {
-        resp = erl_format("error");
-    }
-    erlcmd_send(resp);
+        if (i2c_write(i2c, data, len))
+            ei_encode_atom(resp, &resp_index, "ok");
+        else {
+            ei_encode_tuple_header(resp, &resp_index, 2);
+            ei_encode_atom(resp, &resp_index, "error");
+            ei_encode_atom(resp, &resp_index, "i2c_write_failed");
+        }
+    } else
+        errx(EXIT_FAILURE, "unknown command: %s", cmd);
 
-    erl_free_term(resp);
-    erl_free_term(cmd);
-    erl_free_term(args);
+    debug("sending response: %d bytes", resp_index);
+    erlcmd_send(resp, resp_index);
 }
 
 /**

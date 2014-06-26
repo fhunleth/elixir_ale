@@ -31,10 +31,9 @@
  * @param cookie optional data to pass back to the handler
  */
 void erlcmd_init(struct erlcmd *handler,
-		 void (*request_handler)(ETERM *emsg, void *cookie),
+		 void (*request_handler)(const char *req, void *cookie),
 		 void *cookie)
 {
-    erl_init(NULL, 0);
     memset(handler, 0, sizeof(*handler));
 
     handler->request_handler = request_handler;
@@ -46,21 +45,14 @@ void erlcmd_init(struct erlcmd *handler,
  *
  * @param response what to send back
  */
-void erlcmd_send(ETERM *response)
+void erlcmd_send(char *response, size_t len)
 {
-    unsigned char buf[1024];
+    uint16_t be_len = htons(len - sizeof(uint16_t));
+    memcpy(response, &be_len, sizeof(be_len));
 
-    if (erl_encode(response, buf + sizeof(uint16_t)) == 0)
-	errx(EXIT_FAILURE, "erl_encode");
-
-    ssize_t len = erl_term_len(response);
-    uint16_t be_len = htons(len);
-    memcpy(buf, &be_len, sizeof(be_len));
-
-    len += sizeof(uint16_t);
-    ssize_t wrote = 0;
+    size_t wrote = 0;
     do {
-	ssize_t amount_written = write(STDOUT_FILENO, buf + wrote, len - wrote);
+	ssize_t amount_written = write(STDOUT_FILENO, response + wrote, len - wrote);
 	if (amount_written < 0) {
 	    if (errno == EINTR)
 		continue;
@@ -92,13 +84,7 @@ static size_t erlcmd_try_dispatch(struct erlcmd *handler)
     if (msglen + sizeof(uint16_t) > handler->index)
 	return 0;
 
-    ETERM *emsg = erl_decode(handler->buffer + sizeof(uint16_t));
-    if (emsg == NULL)
-	errx(EXIT_FAILURE, "erl_decode");
-
-    handler->request_handler(emsg, handler->cookie);
-
-    erl_free_term(emsg);
+    handler->request_handler(handler->buffer, handler->cookie);
 
     return msglen + sizeof(uint16_t);
 }
@@ -108,7 +94,7 @@ static size_t erlcmd_try_dispatch(struct erlcmd *handler)
  */
 void erlcmd_process(struct erlcmd *handler)
 {
-    ssize_t amount_read = read(STDIN_FILENO, handler->buffer, sizeof(handler->buffer) - handler->index);
+    ssize_t amount_read = read(STDIN_FILENO, handler->buffer + handler->index, sizeof(handler->buffer) - handler->index);
     if (amount_read < 0) {
 	/* EINTR is ok to get, since we were interrupted by a signal. */
 	if (errno == EINTR)

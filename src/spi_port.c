@@ -36,10 +36,13 @@
 
 //#define DEBUG
 #ifdef DEBUG
-#define debug(...) fprintf(stderr, __VA_ARGS__)
+#define debug(...) do { fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\r\n"); } while(0)
 #else
 #define debug(...)
 #endif
+
+// Max SPI transfer size that we support
+#define SPI_TRANSFER_MAX 256
 
 struct spi_info
 {
@@ -100,7 +103,7 @@ static void spi_init(struct spi_info *spi,
  *
  * @return 	1 for success, 0 for failure
  */
-static int spi_transfer(struct spi_info *spi, unsigned char *tx, unsigned char *rx, unsigned int len)
+static int spi_transfer(struct spi_info *spi, const char *tx, char *rx, unsigned int len)
 {
     struct spi_ioc_transfer tfer = spi->transfer;
 
@@ -114,45 +117,57 @@ static int spi_transfer(struct spi_info *spi, unsigned char *tx, unsigned char *
     return 1;
 }
 
-static void spi_handle_request(ETERM *emsg, void *cookie)
+static void spi_handle_request(const char *req, void *cookie)
 {
     struct spi_info *spi = (struct spi_info *) cookie;
 
     // Commands are of the form {Command, Arguments}:
-    // { atom(), [term()] }
+    // { atom(), term() }
+    int req_index = sizeof(uint16_t);
+    if (ei_decode_version(req, &req_index, NULL) < 0)
+        errx(EXIT_FAILURE, "Message version issue?");
 
-    ETERM *cmd = erl_element(1, emsg);
-    ETERM *args = erl_element(2, emsg);
-    if (cmd == NULL || args == NULL)
-        errx(EXIT_FAILURE, "Expecting { cmd, args }");
+    int arity;
+    if (ei_decode_tuple_header(req, &req_index, &arity) < 0 ||
+            arity != 2)
+        errx(EXIT_FAILURE, "expecting {cmd, args} tuple");
 
-    debug("spi_request_handler: %s\n", ERL_ATOM_PTR(cmd));
+    char cmd[MAXATOMLEN];
+    if (ei_decode_atom(req, &req_index, cmd) < 0)
+        errx(EXIT_FAILURE, "expecting command atom");
 
-    ETERM *resp;
-    if (strcmp(ERL_ATOM_PTR(cmd), "transfer") == 0) {
-        ETERM *etxbuffer = erl_hd(args);
-        if (etxbuffer == NULL)
-            errx(EXIT_FAILURE, "transfer: didn't get data to write");
+    char resp[SPI_TRANSFER_MAX + 64];
+    int resp_index = sizeof(uint16_t); // Space for payload size
+    ei_encode_version(resp, &resp_index);
+    if (strcmp(cmd, "transfer") == 0) {
+        char data[SPI_TRANSFER_MAX];
+        int len;
+        int type;
+        long llen;
+        if (ei_get_type(resp, &resp_index, &type, &len) < 0 ||
+                type != ERL_BINARY_EXT ||
+                len < 1 ||
+                len > SPI_TRANSFER_MAX ||
+                ei_decode_binary(resp, &resp_index, &data, &llen) < 0)
+            errx(EXIT_FAILURE, "transfer: need a binary between 1 and %d bytes", SPI_TRANSFER_MAX);
 
-        unsigned int len = ERL_BIN_SIZE(etxbuffer);
-        unsigned char rxbuffer[len];
+        char rxbuffer[SPI_TRANSFER_MAX];
 
         if (spi_transfer(spi,
-                         ERL_BIN_PTR(etxbuffer),
+                         data,
                          rxbuffer,
                          len))
-            resp = erl_mk_binary((const char *) rxbuffer, len);
-        else
-            resp = erl_format("{error, spi_transfer_failed}");
-        erl_free_term(etxbuffer);
-    } else {
-        resp = erl_format("error");
-    }
-    erlcmd_send(resp);
+            ei_encode_binary(resp, &resp_index, rxbuffer, len);
+        else {
+            ei_encode_tuple_header(resp, &resp_index, 2);
+            ei_encode_atom(resp, &resp_index, "error");
+            ei_encode_atom(resp, &resp_index, "spi_transfer_failed");
+        }
+    } else
+        errx(EXIT_FAILURE, "unknown command: %s", cmd);
 
-    erl_free_term(resp);
-    erl_free_term(cmd);
-    erl_free_term(args);
+    debug("sending response: %d bytes", resp_index);
+    erlcmd_send(resp, resp_index);
 }
 
 /**

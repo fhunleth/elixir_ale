@@ -14,7 +14,7 @@ defmodule ElixirAle.Mixfile do
     [
       app: :elixir_ale,
       version: "0.0.1",
-      elixir: ">= 0.13.1",
+      elixir: ">= 0.14.1",
       compilers: [:ElixirAle, :elixir, :app],
       deps: deps(Mix.env),
       package: package,

@@ -21,8 +21,8 @@ likely).
 
 # Example
 
-    iex> Gpio.start_link(4, :output)
-    iex> Gpio.write(4, 1)
+    iex> {:ok, pid} = Gpio.start_link(4, :output)
+    iex> Gpio.write(pid, 1)
 
 # License
 
