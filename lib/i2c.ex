@@ -15,11 +15,11 @@ defmodule I2c do
   end
 
   def read(pid, count) do
-    GenServer.call pid, {:transfer, count}
+    GenServer.call pid, {:read, count}
   end
 
   def write(pid, data) do
-    GenServer.call pid, {:transfer, data}
+    GenServer.call pid, {:write, data}
   end
 
   # gen_server callbacks
@@ -38,7 +38,7 @@ defmodule I2c do
   end
 
   def handle_call({:read, count}, _from, state) do
-    {:ok, response} = call_port(state, :write, count)
+    {:ok, response} = call_port(state, :read, count)
     {:reply, response, state}
   end
   def handle_call({:write, data}, _from, state) do

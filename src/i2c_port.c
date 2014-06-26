@@ -143,11 +143,11 @@ static void i2c_handle_request(const char *req, void *cookie)
         int len;
         int type;
         long llen;
-        if (ei_get_type(resp, &resp_index, &type, &len) < 0 ||
+        if (ei_get_type(req, &req_index, &type, &len) < 0 ||
                 type != ERL_BINARY_EXT ||
                 len < 1 ||
                 len > I2C_SMBUS_BLOCK_MAX ||
-                ei_decode_binary(resp, &resp_index, &data, &llen) < 0)
+                ei_decode_binary(req, &req_index, &data, &llen) < 0)
             errx(EXIT_FAILURE, "write: need a binary between 1 and %d bytes", I2C_SMBUS_BLOCK_MAX);
 
         // calls the i2c_write function and returns 1 if success or -1 if fails
