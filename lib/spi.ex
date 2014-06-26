@@ -20,9 +20,10 @@ defmodule Spi do
 
   # gen_server callbacks
   def init([devname, mode, bits_per_word, speed_hz, delay_us]) do
-    executable = :code.priv_dir(:elixir_ale) ++ '/spi_port'
+    executable = :code.priv_dir(:elixir_ale) ++ '/ale'
     port = Port.open({:spawn_executable, executable},
-      [{:args, ["/dev/#{devname}",
+      [{:args, ["spi",
+                "/dev/#{devname}",
                 Integer.to_string(mode),
                 Integer.to_string(bits_per_word),
                 Integer.to_string(speed_hz),

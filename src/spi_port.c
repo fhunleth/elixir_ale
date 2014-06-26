@@ -144,11 +144,11 @@ static void spi_handle_request(const char *req, void *cookie)
         int len;
         int type;
         long llen;
-        if (ei_get_type(resp, &resp_index, &type, &len) < 0 ||
+        if (ei_get_type(req, &req_index, &type, &len) < 0 ||
                 type != ERL_BINARY_EXT ||
                 len < 1 ||
                 len > SPI_TRANSFER_MAX ||
-                ei_decode_binary(resp, &resp_index, &data, &llen) < 0)
+                ei_decode_binary(req, &req_index, &data, &llen) < 0)
             errx(EXIT_FAILURE, "transfer: need a binary between 1 and %d bytes (%d, %d)", SPI_TRANSFER_MAX,
                     type, len);
 
@@ -175,16 +175,16 @@ static void spi_handle_request(const char *req, void *cookie)
  * @brief The main function.
  * It waits for data in the buffer and calls the driver.
  */
-int main(int argc, char *argv[])
+int spi_main(int argc, char *argv[])
 {
-    if (argc != 6)
-        errx(EXIT_FAILURE, "%s <device path> <SPI mode (0-3)> <bits/word (8)> <speed (1000000 Hz)> <delay (10 us)>", argv[0]);
+    if (argc != 7)
+        errx(EXIT_FAILURE, "%s spi <device path> <SPI mode (0-3)> <bits/word (8)> <speed (1000000 Hz)> <delay (10 us)>", argv[0]);
 
-    const char *devpath = argv[1];
-    uint8_t mode = (uint8_t) strtoul(argv[2], 0, 0);
-    uint8_t bits = (uint8_t) strtoul(argv[3], 0, 0);
-    uint32_t speed = (uint32_t) strtoul(argv[4], 0, 0);
-    uint16_t delay = (uint16_t) strtoul(argv[5], 0, 0);
+    const char *devpath = argv[2];
+    uint8_t mode = (uint8_t) strtoul(argv[3], 0, 0);
+    uint8_t bits = (uint8_t) strtoul(argv[4], 0, 0);
+    uint32_t speed = (uint32_t) strtoul(argv[5], 0, 0);
+    uint16_t delay = (uint16_t) strtoul(argv[6], 0, 0);
 
     struct spi_info spi;
     spi_init(&spi, devpath, mode, bits, speed, delay);

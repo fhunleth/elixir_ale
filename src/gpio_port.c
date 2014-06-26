@@ -279,16 +279,16 @@ void gpio_handle_request(const char *req, void *cookie)
     erlcmd_send(resp, resp_index);
 }
 
-int main(int argc, char *argv[])
+int gpio_main(int argc, char *argv[])
 {
-    if (argc != 3)
-        errx(EXIT_FAILURE, "%s <pin#> <input|output>", argv[0]);
+    if (argc != 4)
+        errx(EXIT_FAILURE, "%s gpio <pin#> <input|output>", argv[0]);
 
-    int pin_number = strtol(argv[1], NULL, 0);
+    int pin_number = strtol(argv[2], NULL, 0);
     enum gpio_state initial_state;
-    if (strcmp(argv[2], "input") == 0)
+    if (strcmp(argv[3], "input") == 0)
         initial_state = GPIO_INPUT;
-    else if (strcmp(argv[2], "output") == 0)
+    else if (strcmp(argv[3], "output") == 0)
         initial_state = GPIO_OUTPUT;
     else
         errx(EXIT_FAILURE, "Specify 'input' or 'output'");

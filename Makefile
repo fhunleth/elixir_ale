@@ -30,21 +30,13 @@ elixir-code:
 %.o: %.c
 	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) -o $@ $<
 
-priv/gpio_port: src/gpio_port.o src/erlcmd.o
-	@mkdir -p priv
-	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
-
-priv/i2c_port: src/i2c_port.o src/erlcmd.o
-	@mkdir -p priv
-	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
-
-priv/spi_port: src/spi_port.o src/erlcmd.o
+priv/ale: src/ale_main.o src/gpio_port.o src/i2c_port.o src/spi_port.o src/erlcmd.o
 	@mkdir -p priv
 	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
 
 clean:
 	$(MIX) clean
-	rm -f priv/gpio_port priv/i2c_port priv/spi_port src/*.o
+	rm -f priv/ale src/*.o
 
 realclean:
-	rm -fr _build priv/gpio_port priv/i2c_port priv/spi_port src/*.o
+	rm -fr _build priv/ale src/*.o

@@ -169,13 +169,13 @@ static void i2c_handle_request(const char *req, void *cookie)
  * @brief The main function.
  * It waits for data in the buffer and calls the driver.
  */
-int main(int argc, char *argv[])
+int i2c_main(int argc, char *argv[])
 {
-    if (argc != 3)
+    if (argc != 4)
         errx(EXIT_FAILURE, "Must pass device path and device address as arguments");
 
     struct i2c_info i2c;
-    i2c_init(&i2c, argv[1], strtoul(argv[2], 0, 0));
+    i2c_init(&i2c, argv[2], strtoul(argv[3], 0, 0));
 
     struct erlcmd handler;
     erlcmd_init(&handler, i2c_handle_request, &i2c);

@@ -17,7 +17,7 @@ defmodule Gpio do
     GenServer.cast pid, :release
   end
 
-  def write(pid, value) do
+  def write(pid, value) when is_integer(value) do
     GenServer.call pid, {:write, value}
   end
 
@@ -32,9 +32,9 @@ defmodule Gpio do
 
   # gen_server callbacks
   def init([pin, pin_direction]) do
-    executable = :code.priv_dir(:elixir_ale) ++ '/gpio_port'
+    executable = :code.priv_dir(:elixir_ale) ++ '/ale'
     port = Port.open({:spawn_executable, executable},
-    [{:args, ["#{pin}", Atom.to_string(pin_direction)]},
+    [{:args, ["gpio", "#{pin}", Atom.to_string(pin_direction)]},
       {:packet, 2},
       :use_stdio,
       :binary,

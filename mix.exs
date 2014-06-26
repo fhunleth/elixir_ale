@@ -3,7 +3,7 @@ Code.ensure_loaded?(Hex) and Hex.start
 defmodule Mix.Tasks.Compile.ElixirAle do
   @shortdoc "Compiles elixir_ale port binaries"
   def run(_) do
-    0=Mix.Shell.IO.cmd("make priv/gpio_port priv/i2c_port priv/spi_port")
+    0=Mix.Shell.IO.cmd("make priv/ale")
   end
 end
 
