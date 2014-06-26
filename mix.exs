@@ -1,5 +1,3 @@
-Code.ensure_loaded?(Hex) and Hex.start
-
 defmodule Mix.Tasks.Compile.ElixirAle do
   @shortdoc "Compiles elixir_ale port binaries"
   def run(_) do
@@ -16,7 +14,7 @@ defmodule ElixirAle.Mixfile do
       version: "0.0.1",
       elixir: ">= 0.14.1",
       compilers: [:ElixirAle, :elixir, :app],
-      deps: deps(Mix.env),
+      deps: deps,
       package: package,
       description: description
      ]
@@ -26,34 +24,18 @@ defmodule ElixirAle.Mixfile do
 
   defp description do
     """
-    Elixir access to hardware I/O interfaces
+    Elixir access to hardware I/O interfaces such as GPIO, I2C, and SPI.
     """
   end
 
   defp package do
-    [
+    %{files: ["lib", "src/*.[ch]", "mix.exs", "README.md", "LICENSE", "Makefile"],
       contributors: ["Frank Hunleth"],
-      license: "Apache",
-      links: [
-        { "GitHub", "https://github.com/fhunleth/elixir_ale" },
-        { "Issues", "https://github.com/fhunleth/elixir_ale/issues" }
-      ],
-      files: [
-        "lib",
-        "src",
-        "Makefile",
-        "mix.exs",
-        "README.md",
-        "LICENSE"
-      ]
-    ]
+      license: "Apache-2.0",
+      links: %{"GitHub" => "https://github.com/fhunleth/elixir_ale"}}
   end
 
-  defp deps(:docs) do
-    [{ :ex_doc, github: "elixir-lang/ex_doc" }]
-  end
-
-  defp deps(_) do
+  defp deps do
     []
   end
 end
