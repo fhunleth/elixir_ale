@@ -48,11 +48,11 @@ defmodule Gpio do
     {:reply, response, state}
   end
   def handle_call({:write, value}, _from, state) do
-    {:ok, response} = call_port(state, :write, [value])
+    {:ok, response} = call_port(state, :write, value)
     {:reply, response, state}
   end
   def handle_call({:set_int, direction, requestor}, _from, state) do
-    {:ok, response} = call_port(state, :set_int, [direction])
+    {:ok, response} = call_port(state, :set_int, direction)
     new_callbacks = insert_unique(state.callbacks, requestor)
     state = %{state | callbacks: new_callbacks }
     {:reply, response, state}
