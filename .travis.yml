@@ -7,10 +7,11 @@ env:
       global:
              # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
              #   via the "travis encrypt" command using the project repo's public key
-             - secure: "S5hpRVpjLOt2xEJuOJLJYtpf4TqUwfh+mhaw0jBkfc0yiVNO8NfwKLrWYqNBYdbl8fF15a3C/KjCdZZ9RllH6F1N6jxtgWFmiU92DyKiMQVwekeK5NkT8mdB26WlhxdQMBsejheuVVYecQxxc6uDX15WoGy9lO0cxO3TIZKRVkw="
+             - secure: "sbGXW2TBEElKhvOsUGo+7JUSrfq4x1H6LhCzD1yUCsM6xw9osq1As8rrN+J6Run0JIM1Tf1dMyfACPKqr6/JHjl9a97RJKdvTAEIhNOy4/mDV7eufMGCKgPpRFa8NLuFP1/RgkU4rbhO6qPOVVsr7lFFXjrSSwpyXrNNupP8dW0="
+             - ELIXIR_VERSION=1.0.2
 
 before_install:
-    - wget https://github.com/elixir-lang/elixir/releases/download/v1.0.2/Precompiled.zip
+    - wget https://github.com/elixir-lang/elixir/releases/download/v$ELIXIR_VERSION/Precompiled.zip
     - unzip -d elixir Precompiled.zip
 
 before_script:
@@ -25,4 +26,4 @@ addons:
              build_command: "make"
              branch_pattern: coverity_scan
 
-script: make
+script: if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make ; fi
