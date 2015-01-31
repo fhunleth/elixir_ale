@@ -1,6 +1,6 @@
 # Elixir/ALE -- Elixir Actor Library for Embedded
 
-[![Build Status](https://travis-ci.org/fhunleth/elixir_ale.svg)](https://travis-ci.org/fhunleth/elixir_ale)
+[![Build Status](https://travis-ci.org/fhunleth/elixir_ale.svg)](https://travis-ci.org/fhunleth/elixir_ale) [![Coverity Scan Build Status](https://scan.coverity.com/projects/4103/badge.svg)](https://scan.coverity.com/projects/4103)
 
 Elixir/ALE provides high level abstractions for interfacing to hardware
 peripherals on embedded platforms. If this sounds similar to
