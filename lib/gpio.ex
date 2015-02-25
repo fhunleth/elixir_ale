@@ -15,8 +15,8 @@ defmodule Gpio do
   GPIO pin number on the system and `pin_direction` should be
   `:input` or `:output`.
   """
-  def start_link(pin, pin_direction) do
-    GenServer.start_link(__MODULE__, [pin, pin_direction])
+  def start_link(pin, pin_direction, opts \\ []) do
+    GenServer.start_link(__MODULE__, [pin, pin_direction], opts)
   end
 
   @doc """

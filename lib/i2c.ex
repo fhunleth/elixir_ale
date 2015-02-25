@@ -21,8 +21,8 @@ defmodule I2c do
   significant bit indicates read/write. This address refers to the upper
   7-bits that don't change between reads and writes.
   """
-  def start_link(devname, address) do
-    GenServer.start_link(__MODULE__, [devname, address])
+  def start_link(devname, address, opts \\ []) do
+    GenServer.start_link(__MODULE__, [devname, address], opts)
   end
 
   @doc """

@@ -19,8 +19,8 @@ defmodule Spi do
   `speed_hz` is the bus speed
   `delay_us` is the delay in microseconds between transactions
   """
-  def start_link(devname, mode \\ 0, bits_per_word \\ 8, speed_hz \\ 1000000, delay_us \\ 10) do
-    GenServer.start_link(__MODULE__, [devname, mode, bits_per_word, speed_hz, delay_us])
+  def start_link(devname, mode \\ 0, bits_per_word \\ 8, speed_hz \\ 1000000, delay_us \\ 10, opts \\ []) do
+    GenServer.start_link(__MODULE__, [devname, mode, bits_per_word, speed_hz, delay_us], opts)
   end
 
   @doc """
