@@ -9,10 +9,19 @@
 # ERL_LDFLAGS	additional linker flags for projects referencing Erlang libraries
 # MIX		path to mix
 
-EILOC:=$(shell find /usr/local/lib/erlang /usr/lib/erlang -name ei.h -printf '%h\n' 2> /dev/null | head -1)
-ERL_CFLAGS ?= -I/usr/local/include -I$(EILOC) -I/usr/lib/erlang/usr/include/
+# Look for the EI library and header files
+ERL_EI_INCLUDE_DIR ?= $(shell find /usr/local/lib/erlang /usr/lib/erlang -name ei.h -printf '%h\n' 2> /dev/null | head -1)
+ERL_EI_LIBDIR ?= $(shell find /usr/local/lib/erlang /usr/lib/erlang -name libei.a -printf '%h\n' 2> /dev/null | head -1)
 
-ERL_EI_LIBDIR ?= /usr/lib/erlang/usr/lib
+ifeq ($(ERL_EI_INCLUDE_DIR),)
+   $(error Could not find include directory for ei.h. Check that Erlang header files are available)
+endif
+ifeq ($(ERL_EI_LIBDIR),)
+   $(error Could not find libei.a. Check your Erlang installation)
+endif
+
+# Set Erlang-specific compile and linker flags
+ERL_CFLAGS ?= -I$(ERL_EI_INCLUDE_DIR)
 ERL_LDFLAGS ?= -L$(ERL_EI_LIBDIR) -lei
 
 LDFLAGS +=
