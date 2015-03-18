@@ -46,6 +46,14 @@ defmodule I2c do
     GenServer.call pid, {:write, data}
   end
 
+  @doc """
+  Write the specified `data` to the device and then read
+  the specified number of bytes.
+  """
+  def write_read(pid, write_data, read_count) do
+    GenServer.call pid, {:wrrd, write_data, read_count}
+  end
+
   # gen_server callbacks
   def init([devname, address]) do
     executable = :code.priv_dir(:elixir_ale) ++ '/ale'
@@ -67,6 +75,10 @@ defmodule I2c do
   end
   def handle_call({:write, data}, _from, state) do
     {:ok, response} = call_port(state, :write, data)
+    {:reply, response, state}
+  end
+  def handle_call({:wrrd, write_data, read_count}, _from, state) do
+    {:ok, response} = call_port(state, :wrrd, {write_data, read_count})
     {:reply, response, state}
   end
 
