@@ -117,8 +117,16 @@ int gpio_init(struct gpio *pin, unsigned int pin_number, enum gpio_state dir)
        exist, we must be able to write it.
     */
     if (access(direction_path, F_OK) != -1) {
-        if (!sysfs_write_file(direction_path, dir == GPIO_OUTPUT ? "out" : "in"))
-            return -1;
+	const char *dir_string = (dir == GPIO_OUTPUT ? "out" : "in");
+        if (!sysfs_write_file(direction_path, dir_string)) {
+            /* This has failed on a Raspberry Pi in what looks is due
+               to a race condition with exporting the GPIO. Sleep
+               momentarily as a workaround. */
+            usleep(10);
+
+            if (!sysfs_write_file(direction_path, dir_string))
+                return -1;
+        }
     }
 
     pin->pin_number = pin_number;
