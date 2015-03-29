@@ -12,15 +12,21 @@ defmodule Spi do
 
   # Public API
   @doc """
-  Start and link a Spi GenServer.
+  Start and link a SPI GenServer.
 
+  SPI bus options include:
+    `mode`: This specifies the clock polarity and phase to use. (0)
+    `bits_per_word`: bits per word on the bus (8)
+    `speed_hz`: bus speed (1000000)
+    `delay_us`: delay between transations (10)
+
+  Parameters:
   `devname` is the Linux device name for the bus (e.g., "spidev0.0")
-  `bits_per_word` is the number of bits for each word sent to the bus (currently only 8 is supported)
-  `speed_hz` is the bus speed
-  `delay_us` is the delay in microseconds between transactions
+  `spi_opts` is a keyword list to configure the bus
+  `opts` are any options to pass to GenServer.start_link
   """
-  def start_link(devname, mode \\ 0, bits_per_word \\ 8, speed_hz \\ 1000000, delay_us \\ 10, opts \\ []) do
-    GenServer.start_link(__MODULE__, [devname, mode, bits_per_word, speed_hz, delay_us], opts)
+  def start_link(devname, spi_opts \\ [], opts \\ []) do
+    GenServer.start_link(__MODULE__, {devname, spi_opts}, opts)
   end
 
   @doc """
@@ -40,7 +46,12 @@ defmodule Spi do
   end
 
   # gen_server callbacks
-  def init([devname, mode, bits_per_word, speed_hz, delay_us]) do
+  def init({devname, spi_opts}) do
+    mode = Keyword.get(spi_opts, :mode, 0)
+    bits_per_word = Keyword.get(spi_opts, :bits_per_word, 8)
+    speed_hz = Keyword.get(spi_opts, :speed_hz, 1000000)
+    delay_us = Keyword.get(spi_opts, :delay_us, 10)
+
     executable = :code.priv_dir(:elixir_ale) ++ '/ale'
     port = Port.open({:spawn_executable, executable},
       [{:args, ["spi",
