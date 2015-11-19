@@ -122,7 +122,7 @@ int gpio_init(struct gpio *pin, unsigned int pin_number, enum gpio_state dir)
             /* This has failed on a Raspberry Pi in what looks is due
                to a race condition with exporting the GPIO. Sleep
                momentarily as a workaround. */
-            usleep(10);
+            usleep(50000);
 
             if (!sysfs_write_file(direction_path, dir_string))
                 return -1;
