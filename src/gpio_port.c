@@ -118,15 +118,17 @@ int gpio_init(struct gpio *pin, unsigned int pin_number, enum gpio_state dir)
     */
     if (access(direction_path, F_OK) != -1) {
 	const char *dir_string = (dir == GPIO_OUTPUT ? "out" : "in");
-        if (!sysfs_write_file(direction_path, dir_string)) {
-            /* This has failed on a Raspberry Pi in what looks is due
-               to a race condition with exporting the GPIO. Sleep
-               momentarily as a workaround. */
-            usleep(50000);
-
-            if (!sysfs_write_file(direction_path, dir_string))
-                return -1;
+        /* Writing the direction fails on a Raspberry Pi in what looks
+           like a race condition with exporting the GPIO. Poll until it
+           works as a workaround. */
+        int retries = 1000; /* Allow 1000 * 1 ms = 1 second max for retries */
+        while (!sysfs_write_file(direction_path, dir_string) &&
+               retries > 0) {
+            usleep(1000);
+            retries--;
         }
+        if (retries == 0)
+            return -1;
     }
 
     pin->pin_number = pin_number;
