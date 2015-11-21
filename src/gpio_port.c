@@ -62,7 +62,7 @@ int sysfs_write_file(const char *pathname, const char *value)
 {
     int fd = open(pathname, O_WRONLY);
     if (fd < 0) {
-        warn("Error opening %s", pathname);
+        debug("Error opening %s", pathname);
         return 0;
     }
 
@@ -71,7 +71,7 @@ int sysfs_write_file(const char *pathname, const char *value)
     close(fd);
 
     if (written < 0 || (size_t) written != count) {
-        warn("Error writing '%s' to %s", value, pathname);
+        debug("Error writing '%s' to %s", value, pathname);
         return 0;
     }
 
@@ -304,7 +304,8 @@ int gpio_main(int argc, char *argv[])
         errx(EXIT_FAILURE, "Specify 'input' or 'output'");
 
     struct gpio pin;
-    gpio_init(&pin, pin_number, initial_state);
+    if (gpio_init(&pin, pin_number, initial_state) < 0)
+        errx(EXIT_FAILURE, "Error initializing GPIO %d as %s", pin_number, argv[3]);
 
     struct erlcmd handler;
     erlcmd_init(&handler, gpio_handle_request, &pin);
