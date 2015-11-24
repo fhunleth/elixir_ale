@@ -99,13 +99,15 @@ Datasheet](http://www.microchip.com/wwwproducts/Devices.aspx?dDocName=en010532).
 Sending a 0x64 first reads the temperature and sending a 0x74 reads the
 potentiometer.
 
+    # Make sure that you've enabled or loaded the SPI driver or this will
+    # fail.
     iex> {:ok, pid} = Spi.start_link("spidev0.0")
     {:ok, #PID<0.124.0>}
 
     # Read the potentiometer
 
     # Use binary pattern matching to pull out the ADC counts (low 12 bits)
-    iex> <<_::[size(4)], counts::[size(12)]>> = Spi.transfer(pid, <<0x74, 0x00>>)
+    iex> <<_::size(4), counts::size(12)>> = Spi.transfer(pid, <<0x74, 0x00>>)
     <<1, 197>>
 
     iex> counts
@@ -151,13 +153,15 @@ Here's a simple example of using it.
     iex> I2c.read(pid, 11)
     <<15, 0, 0, 0, 0, 0, 0, 0, 0, 17, 16>>
 
+    # The operation of writing one or more bytes to select a register and
+    # then reading is very common, so a shortcut is to just run the following:
+    iex> I2c.write_read(pid, <<0>>, 11)
+    <<15, 0, 0, 0, 0, 0, 0, 0, 0, 17, 16>>
+
     # The 17 in register 9 says that bits 0 and bit 4 are high
     # We could have just read register 9.
 
-    iex> I2c.write(pid, <<9>>)
-    :ok
-
-    iex> I2c.read(pid, 1)
+    iex> I2c.write_read(pid, <<9>>, 1)
     <<17>>
 
 # License
