@@ -1,6 +1,6 @@
 /_build
 /deps
 erl_crash.dump
+/priv
 *.ez
-/priv/ale
 *.o
