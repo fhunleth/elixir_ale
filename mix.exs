@@ -2,6 +2,8 @@ defmodule Mix.Tasks.Compile.ElixirAle do
   @shortdoc "Compiles elixir_ale port binaries"
   def run(_) do
     0=Mix.Shell.IO.cmd("make priv/ale")
+    Mix.Project.build_structure
+    :ok
   end
 end
 
