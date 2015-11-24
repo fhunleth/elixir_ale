@@ -11,7 +11,7 @@ defmodule ElixirAle.Mixfile do
   def project do
     [
       app: :elixir_ale,
-      version: "0.3.0",
+      version: "0.4.0",
       elixir: ">= 0.14.1",
       compilers: [:ElixirAle, :elixir, :app],
       deps: deps,
@@ -29,8 +29,8 @@ defmodule ElixirAle.Mixfile do
   end
 
   defp package do
-    %{files: ["lib", "src/*.[ch]", "mix.exs", "README.md", "LICENSE", "Makefile"],
-      contributors: ["Frank Hunleth"],
+    %{files: ["lib", "priv/.do-not-remove", "src/*.[ch]", "mix.exs", "README.md", "LICENSE", "Makefile"],
+      maintainers: ["Frank Hunleth"],
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/fhunleth/elixir_ale"}}
   end
