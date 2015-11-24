@@ -31,7 +31,7 @@ defmodule ElixirAle.Mixfile do
   end
 
   defp package do
-    %{files: ["lib", "priv/.do-not-remove", "src/*.[ch]", "mix.exs", "README.md", "LICENSE", "Makefile"],
+    %{files: ["lib", "src/*.[ch]", "mix.exs", "README.md", "LICENSE", "Makefile"],
       maintainers: ["Frank Hunleth"],
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/fhunleth/elixir_ale"}}
