@@ -13,7 +13,7 @@ only through Linux interfaces.
 # Getting started
 
 If you're natively compiling Elixir/ALE, everything should work like any other
-Elixir library. Normally, you would include elixir-ale as a dependency in your
+Elixir library. Normally, you would include elixir_ale as a dependency in your
 `mix.exs`. If you just want to try it out, you can do the following:
 
     git clone https://github.com/fhunleth/elixir_ale.git
