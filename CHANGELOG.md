@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.1
+
+  * Bug fixes
+    * Previous fix for `priv` directory in v0.4.0 was insufficient. This
+      release has what is believe to be the correct fix.
+
 ## v0.4.0
 
   * Bug fixes

@@ -17,7 +17,7 @@ Elixir library. Normally, you would include elixir_ale as a dependency in your
 `mix.exs` like this:
 
     defp deps do
-      [{:elixir_ale, "~> 0.4.0"}]
+      [{:elixir_ale, "~> 0.4.1"}]
     end
 
 If you just want to try it out, you can do the following:
