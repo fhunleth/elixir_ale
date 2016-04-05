@@ -1,8 +1,8 @@
-# Elixir/ALE -- Elixir Actor Library for Embedded
+# elixir_ale - Elixir Actor Library for Embedded
 
 [![Build Status](https://travis-ci.org/fhunleth/elixir_ale.svg)](https://travis-ci.org/fhunleth/elixir_ale)
 
-Elixir/ALE provides high level abstractions for interfacing to hardware
+`elixir_ale` provides high level abstractions for interfacing to hardware
 peripherals on embedded platforms. If this sounds similar to
 [Erlang/ALE](https://github.com/esl/erlang-ale), that's because it is. This
 library is a Elixir-ized implementation of the library. It does differ from Erlang/ALE
@@ -12,7 +12,7 @@ only through Linux interfaces.
 
 # Getting started
 
-If you're natively compiling Elixir/ALE, everything should work like any other
+If you're natively compiling elixir_ale, everything should work like any other
 Elixir library. Normally, you would include elixir_ale as a dependency in your
 `mix.exs` like this:
 
@@ -32,7 +32,7 @@ right C compiler is called. See the `Makefile` for the variables that will need
 to be overridden. At a minimum, you will need to set `CROSSCOMPILE`,
 `ERL_CFLAGS`, and `ERL_EI_LIBDIR`.
 
-Elixir/ALE doesn't load device drivers, so you'll need to make sure that any
+`elixir_ale` doesn't load device drivers, so you'll need to make sure that any
 necessary ones for accessing I2C or SPI are loaded beforehand. On the Raspberry
 Pi, the [Adafruit Raspberry Pi I2C
 instructions](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-4-gpio-setup/configuring-i2c)
@@ -40,7 +40,7 @@ may be helpful.
 
 # Examples
 
-Elixir/ALE only supports simple uses of the GPIO, I2C, and SPI interfaces in
+`elixir_ale` only supports simple uses of the GPIO, I2C, and SPI interfaces in
 Linux, but you can still do quite a bit. The following examples were tested on a
 Raspberry Pi that was connected to an [Erlang Embedded Demo
 Board](http://solderpad.com/omerk/erlhwdemo/). There's nothing special about
