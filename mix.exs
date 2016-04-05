@@ -7,6 +7,14 @@ defmodule Mix.Tasks.Compile.ElixirAle do
   end
 end
 
+defmodule Mix.Tasks.CopyImages do
+  @shortdoc "Copy the images referenced by README.md, since ex_doc doesn't do this."
+  use Mix.Task
+  def run(_) do
+    File.cp_r "assets", "doc/assets"
+  end
+end
+
 defmodule ElixirAle.Mixfile do
   use Mix.Project
 
@@ -21,7 +29,8 @@ defmodule ElixirAle.Mixfile do
       deps: deps,
       docs: [extras: ["README.md"]],
       package: package,
-      description: description
+      description: description,
+      aliases: ["docs": ["docs", "copy_images"]]
      ]
   end
 

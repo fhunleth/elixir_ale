@@ -34,7 +34,7 @@ MIX ?= mix
 all: elixir-code
 
 elixir-code:
-	$(MIX) compile
+	MIX_ENV=prod $(MIX) compile
 
 %.o: %.c
 	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) -o $@ $<
