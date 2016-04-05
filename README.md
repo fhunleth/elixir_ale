@@ -55,7 +55,7 @@ and a 0 corresponds to 0 V. The actual voltage depends on the hardware.
 
 Here's an example setup:
 
-![GPIO schematic](doc/images/schematic-gpio.png)
+![GPIO schematic](/assets/images/schematic-gpio.png)
 
 To turn on the LED that's connected to the net labelled
 `PI_GPIO18`, you can run the following:
@@ -104,7 +104,7 @@ going the "wrong" direction are ignored.
 The following shows an example ADC that reads from either a temperature sensor
 on CH0 or a potentiometer on CH1.
 
-![SPI schematic](doc/images/schematic-adc.png)
+![SPI schematic](/assets/images/schematic-adc.png)
 
 The protocol for talking to the ADC is described in the [MCP3203
 Datasheet](http://www.microchip.com/wwwproducts/Devices.aspx?dDocName=en010532).
@@ -136,7 +136,7 @@ supports addressing hardware components and bidirectional use of the data line.
 
 The following shows a bus IO expander connected via I2C to the processor.
 
-![I2C schematic](doc/images/schematic-i2c.png)
+![I2C schematic](/assets/images/schematic-i2c.png)
 
 The protocol for talking to the IO expander is described in the [MCP23008
 Datasheet](http://www.microchip.com/wwwproducts/Devices.aspx?product=MCP23008).
