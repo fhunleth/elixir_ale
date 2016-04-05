@@ -6,6 +6,7 @@ defmodule I2c do
   """
 
   defmodule State do
+    @moduledoc false
     defstruct port: nil, devname: nil
   end
 
@@ -16,8 +17,8 @@ defmodule I2c do
   `devname` should be the I2C bus name (e.g. "i2c-1")
   `address` should be the device's 7-bit address on the I2C bus.
 
-  Note that the address parameter can be confusing when reading a datasheet since
-  sometimes the datasheet specifies the 8-bit address where the least
+  Note that the address parameter can be confusing when reading a datasheet
+  since sometimes the datasheet specifies the 8-bit address where the least
   significant bit indicates read/write. This address refers to the upper
   7-bits that don't change between reads and writes.
   """

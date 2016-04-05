@@ -7,6 +7,7 @@ defmodule Spi do
   """
 
   defmodule State do
+    @moduledoc false
     defstruct port: nil, devname: nil
   end
 
@@ -38,8 +39,8 @@ defmodule Spi do
 
   @doc """
   Perform a SPI transfer. The `data` should be a binary containing the bytes to
-  send. Since SPI transfers simultaneously send and receive, the return value will
-  be a binary of the same length.
+  send. Since SPI transfers simultaneously send and receive, the return value
+  will be a binary of the same length.
   """
   def transfer(pid, data) do
     GenServer.call pid, {:transfer, data}

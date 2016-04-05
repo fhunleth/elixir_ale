@@ -5,8 +5,13 @@ defmodule Gpio do
   This is an Elixir interface to Linux GPIOs. Each GPIO is an
   independent GenServer.
   """
+
   defmodule State do
-    defstruct port: nil, pin: 0, direction: nil, callbacks: []
+    @moduledoc false
+    defstruct port: nil,
+              pin: 0,
+              direction: nil,
+              callbacks: []
   end
 
   # Public API
@@ -76,7 +81,7 @@ defmodule Gpio do
   def handle_call({:set_int, direction, requestor}, _from, state) do
     {:ok, response} = call_port(state, :set_int, direction)
     new_callbacks = insert_unique(state.callbacks, requestor)
-    state = %{state | callbacks: new_callbacks }
+    state = %{state | callbacks: new_callbacks}
     {:reply, response, state}
   end
 
