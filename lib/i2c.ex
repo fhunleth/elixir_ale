@@ -7,20 +7,27 @@ defmodule I2c do
 
   defmodule State do
     @moduledoc false
-    defstruct port: nil, devname: nil
+    defstruct port: nil, address: 0, devname: nil
   end
 
   # Public API
   @doc """
   Start and link the I2c GenServer.
 
-  `devname` should be the I2C bus name (e.g. "i2c-1")
-  `address` should be the device's 7-bit address on the I2C bus.
+  `devname` is the I2C bus name (e.g., "i2c-1")
+  `address` is the device's 7-bit address on the I2C bus
 
-  Note that the address parameter can be confusing when reading a datasheet
-  since sometimes the datasheet specifies the 8-bit address where the least
-  significant bit indicates read/write. This address refers to the upper
-  7-bits that don't change between reads and writes.
+  Note that `address` can be confusing when reading a datasheet
+  since sometimes the datasheet mentions the 8-bit address. For an 8-bit
+  address the least significant bit indicates whether the access is for a
+  read or a write. Microcontrollers like those on Arduinos often use the 8-bit
+  address. To convert an 8-bit address to a 7-bit one, divide the address by
+  two.
+
+  All calls to `read/2`, `write/2`, and `write_read\3` access the device
+  specified by `address`. Some I2C devices can be switched into different
+  modes where they respond to an alternate address. Rather than having to
+  create a second `I2c` process, see `read_device/3` and related routines.
   """
   def start_link(devname, address, opts \\ []) do
     GenServer.start_link(__MODULE__, [devname, address], opts)
@@ -55,31 +62,65 @@ defmodule I2c do
     GenServer.call pid, {:wrrd, write_data, read_count}
   end
 
+  @doc """
+  Initiate a read transaction to the device at the specified `address`. This
+  is the same as `read/2` except that an arbitrary device address may be given.
+  """
+  def read_device(pid, address, count) do
+    GenServer.call pid, {:read_device, address, count}
+  end
+
+  @doc """
+  Write the specified `data` to the device at `address`.
+  """
+  def write_device(pid, address, data) do
+    GenServer.call pid, {:write_device, address, data}
+  end
+
+  @doc """
+  Write the specified `data` to the device and then read
+  the specified number of bytes. This is similar to `write_read/3` except
+  with an I2C device address.
+  """
+  def write_read_device(pid, address, write_data, read_count) do
+    GenServer.call pid, {:wrrd_device, address, write_data, read_count}
+  end
+
   # gen_server callbacks
   def init([devname, address]) do
     executable = :code.priv_dir(:elixir_ale) ++ '/ale'
     port = Port.open({:spawn_executable, executable},
-      [{:args, ["i2c",
-                "/dev/#{devname}",
-                Integer.to_string(address)]},
+      [{:args, ["i2c", "/dev/#{devname}"]},
        {:packet, 2},
        :use_stdio,
        :binary,
        :exit_status])
-    state = %State{port: port, devname: devname}
+    state = %State{port: port, address: address, devname: devname}
     {:ok, state}
   end
 
   def handle_call({:read, count}, _from, state) do
-    {:ok, response} = call_port(state, :read, count)
+    {:ok, response} = call_port(state, :read, state.address, count)
     {:reply, response, state}
   end
   def handle_call({:write, data}, _from, state) do
-    {:ok, response} = call_port(state, :write, data)
+    {:ok, response} = call_port(state, :write, state.address, data)
     {:reply, response, state}
   end
   def handle_call({:wrrd, write_data, read_count}, _from, state) do
-    {:ok, response} = call_port(state, :wrrd, {write_data, read_count})
+    {:ok, response} = call_port(state, :wrrd, state.address, {write_data, read_count})
+    {:reply, response, state}
+  end
+  def handle_call({:read_device, address, count}, _from, state) do
+    {:ok, response} = call_port(state, :read, address, count)
+    {:reply, response, state}
+  end
+  def handle_call({:write_device, address, data}, _from, state) do
+    {:ok, response} = call_port(state, :write, address, data)
+    {:reply, response, state}
+  end
+  def handle_call({:wrrd_device, address, write_data, read_count}, _from, state) do
+    {:ok, response} = call_port(state, :wrrd, address, {write_data, read_count})
     {:reply, response, state}
   end
 
@@ -88,8 +129,8 @@ defmodule I2c do
   end
 
   # Private helper functions
-  defp call_port(state, command, arguments) do
-    msg = {command, arguments}
+  defp call_port(state, command, address, arguments) do
+    msg = {command, address, arguments}
     send state.port, {self, {:command, :erlang.term_to_binary(msg)}}
     receive do
       {_, {:data, response}} ->
