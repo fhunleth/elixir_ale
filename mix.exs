@@ -14,9 +14,12 @@ defmodule ElixirAle.Mixfile do
     [
       app: :elixir_ale,
       version: "0.4.1",
+      name: "elixir_ale",
+      source_url: "https://github.com/fhunleth/elixir_ale",
       elixir: ">= 0.14.1",
       compilers: [:ElixirAle, :elixir, :app],
       deps: deps,
+      docs: [extras: ["README.md"]],
       package: package,
       description: description
      ]
@@ -39,6 +42,8 @@ defmodule ElixirAle.Mixfile do
 
   defp deps do
     [
+      {:earmark, "~> 0.1", only: :dev},
+      {:ex_doc, "~> 0.11", only: :dev},
       {:credo, "~> 0.3", only: [:dev, :test]}
     ]
   end
