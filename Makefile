@@ -36,6 +36,9 @@ all: elixir-code
 elixir-code:
 	MIX_ENV=prod $(MIX) compile
 
+docs:
+	$(MIX) docs
+
 %.o: %.c
 	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) -o $@ $<
 
