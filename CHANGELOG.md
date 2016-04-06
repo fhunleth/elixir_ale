@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.0
+
+  * New features
+    * Add `I2c.detect_devices/1` to scan the I2C bus
+    * Add `I2c.read_device/3`, etc. to support devices on more than one I2C
+      address without needing to create multiple I2c servers
+
 ## v0.4.1
 
   * Bug fixes

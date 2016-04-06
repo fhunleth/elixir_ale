@@ -21,7 +21,7 @@ defmodule ElixirAle.Mixfile do
   def project do
     [
       app: :elixir_ale,
-      version: "0.4.1",
+      version: "0.5.0",
       name: "elixir_ale",
       source_url: "https://github.com/fhunleth/elixir_ale",
       elixir: ">= 0.14.1",
