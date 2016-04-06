@@ -24,7 +24,7 @@ defmodule I2c do
   address. To convert an 8-bit address to a 7-bit one, divide the address by
   two.
 
-  All calls to `read/2`, `write/2`, and `write_read\3` access the device
+  All calls to `read/2`, `write/2`, and `write_read/3` access the device
   specified by `address`. Some I2C devices can be switched into different
   modes where they respond to an alternate address. Rather than having to
   create a second `I2c` process, see `read_device/3` and related routines.
@@ -91,7 +91,7 @@ defmodule I2c do
   and returning a list of device addresses that respond.
 
   WARNING: This is intended to be a debugging aid. Reading bytes from devices
-  can advance internal statemachines and might cause them to get out of sync
+  can advance internal state machines and might cause them to get out of sync
   with other code.
   """
   def detect_devices(pid) do
