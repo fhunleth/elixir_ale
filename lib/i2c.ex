@@ -86,6 +86,19 @@ defmodule I2c do
     GenServer.call pid, {:wrrd_device, address, write_data, read_count}
   end
 
+  @doc """
+  Scan the I2C bus for devices by performing a read at each device address
+  and returning a list of device addresses that respond.
+
+  WARNING: This is intended to be a debugging aid. Reading bytes from devices
+  can advance internal statemachines and might cause them to get out of sync
+  with other code.
+  """
+  def detect_devices(pid) do
+    Enum.reject(0..127,
+                &(I2c.read_device(pid, &1, 1) == {:error, :i2c_read_failed}))
+  end
+
   # gen_server callbacks
   def init([devname, address]) do
     executable = :code.priv_dir(:elixir_ale) ++ '/ale'
