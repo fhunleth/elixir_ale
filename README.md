@@ -38,6 +38,10 @@ Pi, the [Adafruit Raspberry Pi I2C
 instructions](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-4-gpio-setup/configuring-i2c)
 may be helpful.
 
+If you're trying to compile on a Raspberry Pi and you get errors indicated that Erlang headers are missing
+(`ie.h`), you may need to install erlang with `apt-get install
+erlang-dev` or build Erlang from source per instructions [here](http://elinux.org/Erlang).
+
 # Examples
 
 `elixir_ale` only supports simple uses of the GPIO, I2C, and SPI interfaces in
