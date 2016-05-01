@@ -112,6 +112,7 @@ defmodule Gpio do
     end
     {:noreply, state}
   end
+  defp handle_port(_, state), do: {:noreply, state}
 
   defp pin_interrupt_condition?(:rising), do: true
   defp pin_interrupt_condition?(:falling), do: true
