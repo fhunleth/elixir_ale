@@ -218,6 +218,7 @@ void gpio_process(struct gpio *pin)
 
     char resp[256];
     int resp_index = sizeof(uint16_t); // Space for payload size
+    resp[resp_index++] = 'n'; // Notification
     ei_encode_version(resp, &resp_index);
     ei_encode_tuple_header(resp, &resp_index, 2);
     ei_encode_atom(resp, &resp_index, "gpio_interrupt");
@@ -246,6 +247,7 @@ void gpio_handle_request(const char *req, void *cookie)
 
     char resp[256];
     int resp_index = sizeof(uint16_t); // Space for payload size
+    resp[resp_index++] = 'r'; // Response
     ei_encode_version(resp, &resp_index);
     if (strcmp(cmd, "read") == 0) {
         debug("read");
