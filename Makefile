@@ -29,15 +29,9 @@ CFLAGS ?= -O2 -Wall -Wextra -Wno-unused-parameter
 CC ?= $(CROSSCOMPILER)gcc
 MIX ?= mix
 
-.PHONY: all elixir-code clean
+.PHONY: all clean
 
-all: elixir-code
-
-elixir-code:
-	MIX_ENV=prod $(MIX) compile
-
-docs:
-	$(MIX) docs
+all: priv/ale
 
 %.o: %.c
 	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) -o $@ $<
