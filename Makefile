@@ -10,10 +10,10 @@
 # MIX		path to mix
 
 # Check that we're on a supported build platform
-ifeq ($(CROSSCOMPILER),)
+ifeq ($(CROSSCOMPILE),)
     # Not crosscompiling, so check that we're on Linux.
     ifneq ($(shell uname -s),Linux)
-        $(error Elixir ALE only works on Linux. Crosscompiling is possible if $$CROSSCOMPILER is set.)
+        $(error Elixir ALE only works on Linux. Crosscompiling is possible if $$CROSSCOMPILE is set.)
     endif
 endif
 
