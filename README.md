@@ -180,6 +180,32 @@ Here's a simple example of using it.
     iex> I2c.write_read(pid, <<9>>, 1)
     <<17>>
 
+## FAQ
+
+### Can I develop code that uses Elixir ALE on my laptop?
+
+You'll need to fake out the hardware. Code to do this depends
+on what your hardware actually does, but here's one example:
+
+  * https://github.com/paulanthonywilson/saxophone/blob/master/lib/dummies/dummy.ex
+
+Please share other examples if you have them.
+
+### Debugging
+
+The most common issue is getting connected to a part the first time. If you're
+having trouble, check that the device files exist in the `/dev` directory for I2C
+and SPI. GPIOs are usually come up easier, but their corresponding files are in
+`/sys/class/gpio`. Are ARM-based boards, it is common to need to specify a
+device tree file to the Linux kernel that specifies whether pins on I2C, SPI, or
+GPIOs. Some boards also support device tree overlays that can be installed at
+run time to change the usage of pins (the BeagleBone Black is a good example of
+this. See the [Universal I/O
+project](https://github.com/cdsteinkuehler/beaglebone-universal-io). If
+debugging I2C, see `I2c.detect_devices/1` for scanning the whole bus for
+anything in case the device you're using is at a different address than
+expected.
+
 # License
 
 This library draws much of its design and code from the Erlang/ALE project which
