@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.2
+
+  * Fix typo in v0.5.1
+
 ## v0.5.1
 
   * Bug fixes
