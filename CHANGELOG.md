@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.1
+
+  * Bug fixes
+    * Fixed race condition when calling `Gpio.read/1` with interrupts
+      enabled
+
 ## v0.5.0
 
   * New features
