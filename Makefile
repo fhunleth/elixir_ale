@@ -9,6 +9,14 @@
 # ERL_LDFLAGS	additional linker flags for projects referencing Erlang libraries
 # MIX		path to mix
 
+# Check that we're on a supported build platform
+ifeq ($(CROSSCOMPILER),)
+    # Not crosscompiling, so check that we're on Linux.
+    ifneq ($(shell uname -s),Linux)
+        $(error Elixir ALE only works on Linux. Crosscompiling is possible if $$CROSSCOMPILER is set.)
+    endif
+endif
+
 # Look for the EI library and header files
 ERL_EI_INCLUDE_DIR ?= $(shell find /usr/local/lib/erlang /usr/lib/erlang -name ei.h -printf '%h\n' 2> /dev/null | head -1)
 ERL_EI_LIBDIR ?= $(shell find /usr/local/lib/erlang /usr/lib/erlang -name libei.a -printf '%h\n' 2> /dev/null | head -1)
