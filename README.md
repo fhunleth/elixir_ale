@@ -110,7 +110,7 @@ on CH0 or a potentiometer on CH1.
 
 ![SPI schematic](assets/images/schematic-adc.png)
 
-The protocol for talking to the ADC is described in the [MCP3203
+The protocol for talking to the ADC is described in the [MCP3202
 Datasheet](http://www.microchip.com/wwwproducts/Devices.aspx?dDocName=en010532).
 Sending a 0x64 first reads the temperature and sending a 0x74 reads the
 potentiometer.
