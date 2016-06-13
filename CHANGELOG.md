@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.3
+
+  * Use elixir_make instead of custom mix task
+
 ## v0.5.2
 
   * Fix typo in v0.5.1
