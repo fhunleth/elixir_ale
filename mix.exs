@@ -1,15 +1,3 @@
-defmodule Mix.Tasks.Compile.ElixirAle do
-  @shortdoc "Compiles elixir_ale port binary"
-  def run(_) do
-    {result, error_code} = System.cmd("make", ["all"], stderr_to_stdout: true)
-    IO.binwrite result
-    if error_code != 0 do
-      raise Mix.Error, "Make returned an error"
-    end
-    Mix.Project.build_structure
-  end
-end
-
 defmodule Mix.Tasks.CopyImages do
   @shortdoc "Copy the images referenced by README.md, since ex_doc doesn't do this."
   use Mix.Task
@@ -22,19 +10,20 @@ defmodule ElixirAle.Mixfile do
   use Mix.Project
 
   def project do
-    [
-      app: :elixir_ale,
-      version: "0.5.2",
-      name: "elixir_ale",
-      source_url: "https://github.com/fhunleth/elixir_ale",
-      elixir: ">= 0.14.1",
-      compilers: [:ElixirAle, :elixir, :app],
-      deps: deps,
-      docs: [extras: ["README.md"]],
-      package: package,
-      description: description,
-      aliases: ["docs": ["docs", "copy_images"]]
-     ]
+    [app: :elixir_ale,
+     version: "0.5.2",
+     elixir: "~> 1.2",
+     name: "elixir_ale",
+     description: description,
+     package: package,
+     source_url: "https://github.com/fhunleth/elixir_ale",
+     compilers: [:elixir_make] ++ Mix.compilers,
+     make_clean: ["clean"],
+     docs: [extras: ["README.md"]],
+     aliases: ["docs": ["docs", "copy_images"]],
+     build_embedded: Mix.env == :prod,
+     start_permanent: Mix.env == :prod,
+     deps: deps]
   end
 
   def application, do: []
@@ -54,6 +43,7 @@ defmodule ElixirAle.Mixfile do
 
   defp deps do
     [
+      {:elixir_make, "~> 0.1"},
       {:earmark, "~> 0.1", only: :dev},
       {:ex_doc, "~> 0.11", only: :dev},
       {:credo, "~> 0.3", only: [:dev, :test]}
