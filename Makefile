@@ -7,7 +7,6 @@
 # ERL_EI_LIBDIR path to libei.a
 # LDFLAGS	linker flags for linking all binaries
 # ERL_LDFLAGS	additional linker flags for projects referencing Erlang libraries
-# MIX		path to mix
 
 # Check that we're on a supported build platform
 ifeq ($(CROSSCOMPILE),)
@@ -35,7 +34,6 @@ ERL_LDFLAGS ?= -L$(ERL_EI_LIBDIR) -lei
 LDFLAGS +=
 CFLAGS ?= -O2 -Wall -Wextra -Wno-unused-parameter
 CC ?= $(CROSSCOMPILER)gcc
-MIX ?= mix
 
 .PHONY: all clean
 
@@ -49,8 +47,4 @@ priv/ale: src/ale_main.o src/gpio_port.o src/i2c_port.o src/spi_port.o src/erlcm
 	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
 
 clean:
-	$(MIX) clean
 	rm -f priv/ale src/*.o
-
-realclean:
-	rm -fr _build priv/ale src/*.o
