@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.4
+
+  * Bump version of elixir_make to workaround OTP 19 ports issue
+
 ## v0.5.3
 
   * Use elixir_make instead of custom mix task
