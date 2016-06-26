@@ -27,7 +27,7 @@ defmodule ElixirAle.Mixfile do
   end
 
   defp package do
-    %{files: ["lib", "src/*.[ch]", "mix.exs", "README.md", "LICENSE", "Makefile"],
+    %{files: ["lib", "src/*.[ch]", "src/linux/i2c-dev.h", "mix.exs", "README.md", "LICENSE", "Makefile"],
       maintainers: ["Frank Hunleth"],
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/fhunleth/elixir_ale"}}
