@@ -30,6 +30,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#ifndef _IOC_SIZE_BITS
+// Include <asm/ioctl.h> manually on platforms that don't include it
+// from <sys/ioctl.h>.
+#include <asm/ioctl.h>
+#endif
 #include <linux/spi/spidev.h>
 
 #include "erlcmd.h"
