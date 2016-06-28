@@ -39,6 +39,9 @@ defmodule Gpio do
   def write(pid, value) when is_integer(value) do
     GenServer.call pid, {:write, value}
   end
+  def write(pid, true), do: write(pid, 1)
+  def write(pid, false), do: write(pid, 0)
+    
 
   @doc """
   Read the current value of the pin.
