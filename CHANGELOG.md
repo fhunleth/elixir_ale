@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.5.5
+
+  * New features
+    * `true` and `false` can now be passed to `Gpio.write/2`
+
+  * Bug fixes
+    * Include i2c-dev.h to avoid incompatible version on Raspbian 8. This also
+      avoids errors on systems that don't have the header file for whatever
+      reason.
+    * Include asm/ioctl.h for a MIPS platform that doesn't include it
+      automatically.
+
 ## v0.5.4
 
   * Bump version of elixir_make to workaround OTP 19 ports issue
