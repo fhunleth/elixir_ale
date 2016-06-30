@@ -1,6 +1,7 @@
 # elixir_ale - Elixir Actor Library for Embedded
 
 [![Build Status](https://travis-ci.org/fhunleth/elixir_ale.svg)](https://travis-ci.org/fhunleth/elixir_ale)
+[![Hex version](https://img.shields.io/hexpm/v/elixir_ale.svg "Hex version")](https://hex.pm/packages/elixir_ale)
 
 `elixir_ale` provides high level abstractions for interfacing to hardware
 peripherals on embedded platforms. If this sounds similar to
