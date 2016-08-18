@@ -3,13 +3,20 @@
 [![Build Status](https://travis-ci.org/fhunleth/elixir_ale.svg)](https://travis-ci.org/fhunleth/elixir_ale)
 [![Hex version](https://img.shields.io/hexpm/v/elixir_ale.svg "Hex version")](https://hex.pm/packages/elixir_ale)
 
-`elixir_ale` provides high level abstractions for interfacing to hardware
-peripherals on embedded platforms. If this sounds similar to
-[Erlang/ALE](https://github.com/esl/erlang-ale), that's because it is. This
-library is a Elixir-ized implementation of the library. It does differ from Erlang/ALE
-in that the C port side has been simplified and all Raspberry PI-specific code
-removed. It still runs on the Raspberry PI, but it interfaces to the hardware
-only through Linux interfaces.
+`elixir_ale` provides high level abstractions for interfacing to GPIOs, I2C
+buses and SPI peripherals on Linux platforms. Internally, it uses the Linux
+sysclass interface so that it does not require platform-dependent code.
+
+`elixir_ale` works great with LEDs, buttons, many kinds of sensors, and simple
+control of motors. In general, if a device requires high speed transactions or
+has hard real-time constraints in its interactions, this is not the right
+library. For those devices, it is recommended to look at other driver options, such
+as using a Linux kernel driver.
+
+If this sounds similar to [Erlang/ALE](https://github.com/esl/erlang-ale), that's because it is. This
+library is a Elixir-ized implementation of the original project with some updates
+to the C side. (Many of thoese changes have made it back to the original project
+now.)
 
 # Getting started
 
@@ -183,7 +190,49 @@ Here's a simple example of using it.
 
 ## FAQ
 
-### Can I develop code that uses Elixir ALE on my laptop?
+### Where can I get help?
+
+Most issues people have are on how to communicate with hardware for the first
+time. Since `elixir_ale` is a thin wrapper on the Linux sys class interface, you
+may find help by searching for similar issues when using Python or C.
+
+For help specifically with `elixir_ale`, you may also find help on the
+nerves channel on the [elixir-lang Slack](https://elixir-slackin.herokuapp.com/).
+Many [Nerves](http://nerves-project.org) users also use `elixir_ale`.
+
+### Why isn't elixir_ale a NIF?
+
+While `elixir_ale` should never crash, it's hard to guarantee that weird
+conditions on the I2C or SPI buses wouldn't hang the Erlang VM. `elixir_ale`
+errors on the side of safety of the VM.
+
+### I tried turning on and off a GPIO as fast as I could. Why was it slow?
+
+Please don't do that - there are so many better ways of addressing whatever
+you're trying to do:
+
+  1. If you're trying to drive a servo or dim an LED, look into PWM. Many
+     platforms have PWM hardware and you won't tax your CPU at all. If your
+     platform is missing a PWM, several chips are available that take I2C
+     commands to drive a PWM output.
+  2. If you need to implement a wire level protocol to talk to a device, look
+     for a Linux kernel driver. It may just be a matter of loading the right
+     kernel module.
+  3. If you want a blinking LED to indicate status, `elixir_ale` really should
+     be fast enough to do that, but check out Linux's LED class interface. Linux
+     can flash LEDs, trigger off events and more. See [nerves_leds](https://github.com/nerves-project/nerves_leds).
+
+If you're still intent on optimizing GPIO access, you may be interested in
+[gpio_twiddler](https://github.com/fhunleth/gpio_twiddler).
+
+### Where's PWM support?
+
+On the hardware that I normally use, PWM has been implemented in a
+platform-dependent way. For ease of maintenance, `elixir_ale` doesn't have any
+platform-dependent code, so supporting it would be difficult. An Elixir PWM
+library would be very interesting, though, should anyone want to implement it.
+
+### Can I develop code that uses elixir_ale on my laptop?
 
 You'll need to fake out the hardware. Code to do this depends
 on what your hardware actually does, but here's one example:
@@ -192,7 +241,7 @@ on what your hardware actually does, but here's one example:
 
 Please share other examples if you have them.
 
-### Debugging
+### How do I debug?
 
 The most common issue is getting connected to a part the first time. If you're
 having trouble, check that the device files exist in the `/dev` directory for I2C
@@ -206,6 +255,11 @@ project](https://github.com/cdsteinkuehler/beaglebone-universal-io). If
 debugging I2C, see `I2c.detect_devices/1` for scanning the whole bus for
 anything in case the device you're using is at a different address than
 expected.
+
+### Can I help maintain elixir_ale?
+
+Yes! If your life has been improved by `elixir_ale` and you want to give back,
+it would be great to have new energy put into this project. Please email me.
 
 # License
 
