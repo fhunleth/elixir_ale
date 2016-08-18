@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.6
+
+  * Bug fixes
+    * I2C transfers may now be up to 512 bytes. Thanks to bendiken for this fix.
+      See https://github.com/fhunleth/elixir_ale/pull/21.
+
 ## v0.5.5
 
   * New features
