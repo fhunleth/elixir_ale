@@ -50,7 +50,7 @@ defmodule Spi do
   def init({devname, spi_opts}) do
     mode = Keyword.get(spi_opts, :mode, 0)
     bits_per_word = Keyword.get(spi_opts, :bits_per_word, 8)
-    speed_hz = Keyword.get(spi_opts, :speed_hz, 1000000)
+    speed_hz = Keyword.get(spi_opts, :speed_hz, 1_000_000)
     delay_us = Keyword.get(spi_opts, :delay_us, 10)
 
     executable = :code.priv_dir(:elixir_ale) ++ '/ale'

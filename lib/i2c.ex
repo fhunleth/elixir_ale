@@ -121,7 +121,8 @@ defmodule I2c do
     {:reply, response, state}
   end
   def handle_call({:wrrd, write_data, read_count}, _from, state) do
-    {:ok, response} = call_port(state, :wrrd, state.address, {write_data, read_count})
+    {:ok, response} =
+        call_port(state, :wrrd, state.address, {write_data, read_count})
     {:reply, response, state}
   end
   def handle_call({:read_device, address, count}, _from, state) do
