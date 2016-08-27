@@ -11,6 +11,12 @@ defmodule Spi do
     defstruct port: nil, devname: nil
   end
 
+  @type spi_option ::
+    {:mode, 0..3} |
+    {:bits_per_word, 0..16} |  # 0 is interpreted as 8-bits
+    {:speed_hz, pos_integer} |
+    {:delay_us, non_neg_integer}
+
   # Public API
   @doc """
   Start and link a SPI GenServer.
@@ -26,6 +32,7 @@ defmodule Spi do
   `spi_opts` is a keyword list to configure the bus
   `opts` are any options to pass to GenServer.start_link
   """
+  @spec start_link(binary, [spi_option], [term]) :: {:ok, pid}
   def start_link(devname, spi_opts \\ [], opts \\ []) do
     GenServer.start_link(__MODULE__, {devname, spi_opts}, opts)
   end
@@ -33,6 +40,7 @@ defmodule Spi do
   @doc """
   Stop the GenServer and release the SPI resources.
   """
+  @spec release(pid) :: :ok
   def release(pid) do
     GenServer.cast pid, :release
   end
@@ -42,6 +50,7 @@ defmodule Spi do
   send. Since SPI transfers simultaneously send and receive, the return value
   will be a binary of the same length.
   """
+  @spec transfer(pid, binary) :: binary | {:ok, term}
   def transfer(pid, data) do
     GenServer.call pid, {:transfer, data}
   end

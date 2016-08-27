@@ -14,12 +14,16 @@ defmodule Gpio do
               callbacks: []
   end
 
+  @type pin_direction :: :input | :output
+  @type int_direction :: :rising | :falling | :both
+
   # Public API
   @doc """
   Start and link a new GPIO GenServer. `pin` should be a valid
   GPIO pin number on the system and `pin_direction` should be
   `:input` or `:output`.
   """
+  @spec start_link(integer, pin_direction, [term]) :: {:ok, pid}
   def start_link(pin, pin_direction, opts \\ []) do
     GenServer.start_link(__MODULE__, [pin, pin_direction], opts)
   end
@@ -27,6 +31,7 @@ defmodule Gpio do
   @doc """
   Free the resources associated with pin and stop the GenServer.
   """
+  @spec release(pid) :: :ok
   def release(pid) do
     GenServer.cast pid, :release
   end
@@ -37,6 +42,7 @@ defmodule Gpio do
   or `true` for logic high. Other non-zero values will result in logic
   high being output.
   """
+  @spec write(pid, 0 | 1 | true | false) :: :ok | {:error, term}
   def write(pid, value) when is_integer(value) do
     GenServer.call pid, {:write, value}
   end
@@ -46,6 +52,7 @@ defmodule Gpio do
   @doc """
   Read the current value of the pin.
   """
+  @spec read(pid) :: :ok | {:error, term}
   def read(pid) do
     GenServer.call pid, :read
   end
@@ -55,6 +62,7 @@ defmodule Gpio do
   `:rising` transitions, `:falling` transitions, or `:both`. The process
   that calls this method will receive the messages.
   """
+  @spec set_int(pid, int_direction) :: :ok | {:error, term}
   def set_int(pid, direction) do
     true = pin_interrupt_condition?(direction)
     GenServer.call pid, {:set_int, direction, self}

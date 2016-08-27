@@ -10,6 +10,8 @@ defmodule I2c do
     defstruct port: nil, address: 0, devname: nil
   end
 
+  @type i2c_address :: 0..127
+
   # Public API
   @doc """
   Start and link the I2c GenServer.
@@ -29,6 +31,7 @@ defmodule I2c do
   modes where they respond to an alternate address. Rather than having to
   create a second `I2c` process, see `read_device/3` and related routines.
   """
+  @spec start_link(binary, i2c_address, [term]) :: {:ok, pid}
   def start_link(devname, address, opts \\ []) do
     GenServer.start_link(__MODULE__, [devname, address], opts)
   end
@@ -36,6 +39,7 @@ defmodule I2c do
   @doc """
   Stop the GenServer and release all resources.
   """
+  @spec release(pid) :: :ok
   def release(pid) do
     GenServer.cast pid, :release
   end
@@ -43,6 +47,7 @@ defmodule I2c do
   @doc """
   Initiate a read transaction on the I2C bus of `count` bytes.
   """
+  @spec read(pid, integer) :: binary | {:error, term}
   def read(pid, count) do
     GenServer.call pid, {:read, count}
   end
@@ -50,6 +55,7 @@ defmodule I2c do
   @doc """
   Write the specified `data` to the device.
   """
+  @spec write(pid, binary) :: :ok | {:error, term}
   def write(pid, data) do
     GenServer.call pid, {:write, data}
   end
@@ -58,6 +64,7 @@ defmodule I2c do
   Write the specified `data` to the device and then read
   the specified number of bytes.
   """
+  @spec write_read(pid, binary, integer) :: binary | {:error, term}
   def write_read(pid, write_data, read_count) do
     GenServer.call pid, {:wrrd, write_data, read_count}
   end
@@ -66,6 +73,7 @@ defmodule I2c do
   Initiate a read transaction to the device at the specified `address`. This
   is the same as `read/2` except that an arbitrary device address may be given.
   """
+  @spec read_device(pid, i2c_address, integer) :: binary | {:error, term}
   def read_device(pid, address, count) do
     GenServer.call pid, {:read_device, address, count}
   end
@@ -73,6 +81,7 @@ defmodule I2c do
   @doc """
   Write the specified `data` to the device at `address`.
   """
+  @spec write_device(pid, i2c_address, binary) :: :ok | {:error, term}
   def write_device(pid, address, data) do
     GenServer.call pid, {:write_device, address, data}
   end
@@ -82,6 +91,8 @@ defmodule I2c do
   the specified number of bytes. This is similar to `write_read/3` except
   with an I2C device address.
   """
+  @spec write_read_device(pid, i2c_address, binary, integer) ::
+    binary | {:error, term}
   def write_read_device(pid, address, write_data, read_count) do
     GenServer.call pid, {:wrrd_device, address, write_data, read_count}
   end
@@ -94,6 +105,7 @@ defmodule I2c do
   can advance internal state machines and might cause them to get out of sync
   with other code.
   """
+  @spec detect_devices(pid) :: [integer]
   def detect_devices(pid) do
     Enum.reject(0..127,
                 &(I2c.read_device(pid, &1, 1) == {:error, :i2c_read_failed}))
