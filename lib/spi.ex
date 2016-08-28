@@ -50,7 +50,7 @@ defmodule Spi do
   send. Since SPI transfers simultaneously send and receive, the return value
   will be a binary of the same length.
   """
-  @spec transfer(pid, binary) :: binary | {:ok, term}
+  @spec transfer(pid, binary) :: binary | {:error, term}
   def transfer(pid, data) do
     GenServer.call pid, {:transfer, data}
   end
