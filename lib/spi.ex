@@ -22,15 +22,15 @@ defmodule Spi do
   Start and link a SPI GenServer.
 
   SPI bus options include:
-    `mode`: This specifies the clock polarity and phase to use. (0)
-    `bits_per_word`: bits per word on the bus (8)
-    `speed_hz`: bus speed (1000000)
-    `delay_us`: delay between transations (10)
+   * `mode`: This specifies the clock polarity and phase to use. (0)
+   * `bits_per_word`: bits per word on the bus (8)
+   * `speed_hz`: bus speed (1000000)
+   * `delay_us`: delay between transations (10)
 
   Parameters:
-  `devname` is the Linux device name for the bus (e.g., "spidev0.0")
-  `spi_opts` is a keyword list to configure the bus
-  `opts` are any options to pass to GenServer.start_link
+   * `devname` is the Linux device name for the bus (e.g., "spidev0.0")
+   * `spi_opts` is a keyword list to configure the bus
+   * `opts` are any options to pass to GenServer.start_link
   """
   @spec start_link(binary, [spi_option], [term]) :: {:ok, pid}
   def start_link(devname, spi_opts \\ [], opts \\ []) do
