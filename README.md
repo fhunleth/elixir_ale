@@ -259,6 +259,10 @@ debugging I2C, see `I2c.detect_devices/1` for scanning the whole bus for
 anything in case the device you're using is at a different address than
 expected.
 
+### Will it run on Arduino?
+
+No. Elixir ALE only runs on Linux-based boards. If you're interested in controlling an Arduino from a computer that can run Elixir, check out [nerves_uart](https://hex.pm/packages/nerves_uart) for communicating via the Arduino's serial connection or [firmata](https://github.com/mobileoverlord/firmata) for communication using the Arduino's Firmata protocol.
+
 ### Can I help maintain elixir_ale?
 
 Yes! If your life has been improved by `elixir_ale` and you want to give back,
