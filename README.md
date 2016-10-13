@@ -102,7 +102,7 @@ If you'd like to get a message when the button is pressed or released, call the
     {:gpio_interrupt, 17, :rising}
     {:gpio_interrupt, 17, :falling}
     :ok
-    
+
 Note that after calling `set_int`, the calling process will receive an initial message with the state of the pin.
 This prevents the race condition between getting the initial state of the pin and turning on interrupts. Without it, you could get the state of the pin, it could change states, and then you could start waiting on it for interrupts. If that happened, you would be out of sync.
 
@@ -240,7 +240,7 @@ library would be very interesting, though, should anyone want to implement it.
 You'll need to fake out the hardware. Code to do this depends
 on what your hardware actually does, but here's one example:
 
-  * https://github.com/paulanthonywilson/saxophone/blob/master/lib/dummies/dummy.ex
+  * http://www.cultivatehq.com/posts/compiling-and-testing-elixir-nerves-on-your-host-machine/
 
 Please share other examples if you have them.
 
