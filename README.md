@@ -15,7 +15,7 @@ as using a Linux kernel driver.
 
 If this sounds similar to [Erlang/ALE](https://github.com/esl/erlang-ale), that's because it is. This
 library is a Elixir-ized implementation of the original project with some updates
-to the C side. (Many of thoese changes have made it back to the original project
+to the C side. (Many of those changes have made it back to the original project
 now.)
 
 # Getting started
@@ -69,7 +69,7 @@ Here's an example setup:
 
 ![GPIO schematic](assets/images/schematic-gpio.png)
 
-To turn on the LED that's connected to the net labelled
+To turn on the LED that's connected to the net labeled
 `PI_GPIO18`, you can run the following:
 
     iex> {:ok, pid} = Gpio.start_link(18, :output)
@@ -112,7 +112,7 @@ A SPI bus is a common multi-wire bus used to connect components on a circuit
 board. A clock line drives the timing of sending bits between components. Bits
 on the `MOSI` line go from the master (usually the processor running Linux) to
 the slave, and bits on the `MISO` line go the other direction. Bits transfer
-both directions simultanteously. However, much of the time, the protocol used
+both directions simultaneously. However, much of the time, the protocol used
 across the SPI bus has a request followed by a response and in these cases, bits
 going the "wrong" direction are ignored.
 
