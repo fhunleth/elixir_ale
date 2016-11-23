@@ -112,8 +112,13 @@ static int spi_transfer(struct spi_info *spi, const char *tx, char *rx, unsigned
 {
     struct spi_ioc_transfer tfer = spi->transfer;
 
+    // The Linux header spidev.h expects pointers to be in 64-bit integers (__u64),
+    // but pointers on Raspberry Pi are only 32 bits.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
     tfer.tx_buf = (__u64) tx;
     tfer.rx_buf = (__u64) rx;
+#pragma GCC diagnostic pop
     tfer.len = len;
 
     if (ioctl(spi->fd, SPI_IOC_MESSAGE(1), &tfer) < 1)
