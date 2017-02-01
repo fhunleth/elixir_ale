@@ -1,6 +1,9 @@
 # Changelog
 
-## v0.5.7-dev
+## v0.5.7
+
+  * Bug fixes
+    * Clean up warnings especially the Elixir 1.4 bare function ones
 
 ## v0.5.6
 
