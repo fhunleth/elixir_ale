@@ -7,4 +7,3 @@
   5. Wait for the Travis builds to complete successfully
   6. Copy the latest CHANGELOG.md entry to the GitHub releases description
   7. Run `mix hex.publish`
-  8. Run `mix hex.docs`
