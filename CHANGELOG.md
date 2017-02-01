@@ -1,5 +1,7 @@
 # Changelog
 
+## v0.5.8-dev
+
 ## v0.5.7
 
   * Bug fixes
