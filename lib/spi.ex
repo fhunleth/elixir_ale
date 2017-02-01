@@ -90,7 +90,7 @@ defmodule Spi do
   # Private helper functions
   defp call_port(state, command, arguments) do
     msg = {command, arguments}
-    send state.port, {self, {:command, :erlang.term_to_binary(msg)}}
+    send state.port, {self(), {:command, :erlang.term_to_binary(msg)}}
     receive do
       {_, {:data, response}} ->
         {:ok, :erlang.binary_to_term(response)}

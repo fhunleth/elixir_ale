@@ -65,7 +65,7 @@ defmodule Gpio do
   @spec set_int(pid, int_direction) :: :ok | {:error, term}
   def set_int(pid, direction) do
     true = pin_interrupt_condition?(direction)
-    GenServer.call pid, {:set_int, direction, self}
+    GenServer.call pid, {:set_int, direction, self()}
   end
 
   # gen_server callbacks
@@ -107,7 +107,7 @@ defmodule Gpio do
 
   defp call_port(state, command, arguments) do
     msg = {command, arguments}
-    send state.port, {self, {:command, :erlang.term_to_binary(msg)}}
+    send state.port, {self(), {:command, :erlang.term_to_binary(msg)}}
     receive do
       {_, {:data, <<?r,response::binary>>}} ->
         {:ok, :erlang.binary_to_term(response)}

@@ -157,7 +157,7 @@ defmodule I2c do
   # Private helper functions
   defp call_port(state, command, address, arguments) do
     msg = {command, address, arguments}
-    send state.port, {self, {:command, :erlang.term_to_binary(msg)}}
+    send state.port, {self(), {:command, :erlang.term_to_binary(msg)}}
     receive do
       {_, {:data, response}} ->
         {:ok, :erlang.binary_to_term(response)}
