@@ -24,7 +24,7 @@ If you're natively compiling elixir_ale, everything should work like any other
 Elixir library. Normally, you would include elixir_ale as a dependency in your
 `mix.exs` like this:
 
-    defp deps do
+    def deps do
       [{:elixir_ale, "~> 0.5.7"}]
     end
 
