@@ -1,4 +1,4 @@
-defmodule Spi do
+defmodule ElixirALE.SPI do
   use GenServer
 
   @moduledoc """

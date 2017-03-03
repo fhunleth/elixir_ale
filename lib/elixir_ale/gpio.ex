@@ -1,4 +1,4 @@
-defmodule Gpio do
+defmodule ElixirALE.GPIO do
   use GenServer
 
   @moduledoc """

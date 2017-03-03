@@ -1,4 +1,4 @@
-defmodule I2c do
+defmodule ElixirALE.I2C do
   use GenServer
 
   @moduledoc """
@@ -108,7 +108,7 @@ defmodule I2c do
   @spec detect_devices(pid) :: [integer]
   def detect_devices(pid) do
     Enum.reject(0..127,
-                &(I2c.read_device(pid, &1, 1) == {:error, :i2c_read_failed}))
+                &(read_device(pid, &1, 1) == {:error, :i2c_read_failed}))
   end
 
   # gen_server callbacks
