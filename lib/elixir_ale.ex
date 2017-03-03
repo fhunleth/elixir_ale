@@ -1,0 +1,2 @@
+defmodule ElixirALE do
+end
