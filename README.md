@@ -66,12 +66,12 @@ A GPIO is just a wire that you can use as an input or an output. It can only be
 one of two values, 0 or 1. A 1 corresponds to a logic high voltage like 3.3 V
 and a 0 corresponds to 0 V. The actual voltage depends on the hardware.
 
-Here's an example setup:
+Here's an example of turning an LED on or off:
 
-![GPIO schematic](assets/images/schematic-gpio.png)
+![GPIO LED schematic](assets/images/schematic-gpio-led.png)
 
-To turn on the LED that's connected to the net labeled
-`PI_GPIO18`, you can run the following:
+To turn on the LED that's connected to the net (or wire) labeled
+`GPIO18`, run the following:
 
     iex> alias ElixirALE.GPIO
     iex> {:ok, pid} = GPIO.start_link(18, :output)
@@ -80,7 +80,19 @@ To turn on the LED that's connected to the net labeled
     iex> GPIO.write(pid, 1)
     :ok
 
-Input works similarly:
+Input works similarly. Here's an example of a button with a pull down
+resister connected.
+
+![GPIO Button schematic](assets/images/schematic-gpio-button.png)
+
+If you're not familiar with pull up or pull down
+resisters, they're resisters whose purpose is to drive a wire
+high or low when the button isn't pressed. In this case, it drives the
+wire low. Many processors have ways of configuring internal resisters
+to accomplish the same effect without needing to add an external resister.
+It's platform-dependent and not shown here.
+
+The code looks like this in `elixir_ale`:
 
     iex> {:ok, pid} = GPIO.start_link(17, :input)
     {:ok, #PID<0.97.0>}
@@ -215,7 +227,7 @@ errors on the side of safety of the VM.
 
 ### I tried turning on and off a GPIO as fast as I could. Why was it slow?
 
-Please don't do that - there are so many better ways of addressing whatever
+Please don't do that - there are so many better ways of accomplishing whatever
 you're trying to do:
 
   1. If you're trying to drive a servo or dim an LED, look into PWM. Many
