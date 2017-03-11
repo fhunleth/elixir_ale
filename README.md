@@ -117,28 +117,55 @@ If you'd like to get a message when the button is pressed or released, call the
     {:gpio_interrupt, 17, :falling}
     :ok
 
-Note that after calling `set_int`, the calling process will receive an initial message with the state of the pin.
-This prevents the race condition between getting the initial state of the pin and turning on interrupts. Without it, you could get the state of the pin, it could change states, and then you could start waiting on it for interrupts. If that happened, you would be out of sync.
+Note that after calling `set_int`, the calling process will receive an initial 
+message with the state of the pin.  This prevents the race condition between 
+getting the initial state of the pin and turning on interrupts. Without it, 
+you could get the state of the pin, it could change states, and then you could 
+start waiting on it for interrupts. If that happened, you would be out of sync.
 
 ## SPI
 
-A SPI bus is a common multi-wire bus used to connect components on a circuit
-board. A clock line drives the timing of sending bits between components. Bits
-on the `MOSI` line go from the master (usually the processor running Linux) to
-the slave, and bits on the `MISO` line go the other direction. Bits transfer
-both directions simultaneously. However, much of the time, the protocol used
-across the SPI bus has a request followed by a response and in these cases, bits
-going the "wrong" direction are ignored.
+A Serial Peripheral Interface (SPI, pronounced "spy") bus is a common multi-wire 
+bus used to connect components on a circuit board. A clock line drives the 
+timing of sending bits between components. Bits on the Master Out Slave In `MOSI` 
+line go from the master (usually the processor running Linux) to the slave, 
+and bits on the Master In Slave Out `MISO` line go the other direction. Bits 
+transfer both directions simultaneously. However, much of the time, the 
+protocol used across the SPI bus has a request followed by a response and in 
+these cases, bits going the "wrong" direction are ignored.  This will become 
+more clear in the example below.
 
-The following shows an example ADC that reads from either a temperature sensor
-on CH0 or a potentiometer on CH1.
+The following shows an example MCP3008 Analog to Digital Converter (ADC) that reads from 
+an analog moisture sensor, converts the analog measurements to digital, and 
+sends the digital measurements to SPI pins on a Raspberry Pi.  An ADC is 
+used to convert the analog signal from a sensor to a digital signal, so the 
+signal can be read by the main processor running Linux (e.g. Raspberry Pi.) 
+A Raspberry Pi can't read an analog signal, so it needs an ADC to convert the
+signal to digital.
+
+UPDATED SCHEMATIC?
 
 ![SPI schematic](assets/images/schematic-adc.png)
 
-The protocol for talking to the ADC is described in the [MCP3202
-Datasheet](http://www.microchip.com/wwwproducts/Devices.aspx?dDocName=en010532).
-Sending a 0x64 first reads the temperature and sending a 0x74 reads the
-potentiometer.
+The protocol for talking to the ADC can be found on the MCP3008 data sheet 
+which you will find on the [MCP3008 product page](http://www.microchip.com/wwwproducts/en/MCP3008).  If 
+you are new to hardware, a data sheet can be intimidating but they become
+much easier to read once you know what you are looking for.  The protocol
+is very similar to an application program interface (API) in the software world.  
+
+In the case of the MCP3008, the protocol is found in section 5.0 "SERIAL
+COMMUNICATION" on page 19.  The protocol will tell you the position and 
+function of the bits you will send to the ADC, along with how the data (in the
+form of bits) will be returned. 
+
+Figure 5-1 on pg 20 shows 4 lines, CS (chip select), CLK (clock), DIN (data in), and 
+DOUT (data out).  We'll look at the DIN line first to determine what to send.  Then 
+we'll look at the DOUT line to determine what we will receive.
+
+TODO INSERT & DESCRIBE HOW TO READ FIGURE 5-1, SEE JOY OF HARDWARE SLIDES
+
+Using the protocol from the data sheet here is how we will read the moisture 
+sensor.
 
     # Make sure that you've enabled or loaded the SPI driver or this will
     # fail.
@@ -146,18 +173,61 @@ potentiometer.
     iex> {:ok, pid} = SPI.start_link("spidev0.0")
     {:ok, #PID<0.124.0>}
 
-    # Read the potentiometer
+    # Read the moisture sensor
 
-    # Use binary pattern matching to pull out the ADC counts (low 12 bits)
-    iex> <<_::size(4), counts::size(12)>> = SPI.transfer(pid, <<0x74, 0x00>>)
-    <<1, 197>>
+    # Use binary pattern matching to pull out the ADC counts (low 10 bits)
+    iex> mode = 1 #Single-ended mode
+    iex> sensor = 2 #Try the CH2 sensor
+    iex> <<_::size(14), value::size(10)>> =
+           SPI.transfer(pid, <<0x01, mode::size(1), sensor::size(3), 0::size(12)>>)
+    "NEED WHAT IT RETURNS"
 
-    iex> counts
-    453
+    iex> IO.puts "Sensor #{sensor} measured #{value}"
+    "NEED WHAT IT RETURNS"
 
-    # Convert counts to volts (1023 = 3.3 V)
-    iex> volts = counts / 1023 * 3.3
-    1.461290322580645
+If you are new to using Elixir for embedded, there are a couple things here you 
+might not be familiar with.  We'll be working with bit strings.  If this is 
+new to you, you might want to refer to the 
+[Elixir docs for bitstings](https://hexdocs.pm/elixir/Kernel.SpecialForms.html#%3C%3C%3E%3E/1).
+
+TODO DISCUSS START LINK...WHY "spidev0.0"?
+
+Next we'll make a call to SPI.transfer.
+
+    SPI.transfer(pid, <<0x01, mode::size(1), sensor::size(3), 0::size(12)>>)
+
+We are building the bitstring in 4 segments.  The first segement `0x01`, is the 
+hexadecimal representation of `00000001` that we determined above we need to 
+send in the first byte.  The final bit `1` will be the start bit.  It is 
+common to describe bytes using hexadecimal notation.
+
+The next bit will be for the mode which we have set to 1 for Single-ended mode.
+
+TODO:  The slides say 0 for Single-ended mode, but that doesnt' seem to match 
+the data sheet.
+
+Next we will send 3 bits to select the sensor on channel 2.  You can see in 
+Table 5-2 on pg 19 of the data sheet `010` will select channel 2 
+(CH2).  `2::size(3)` is equivalent to `010`.
+
+Finally we include 12 bits corresponding with the 1 bit between request & 
+response, the 1 bit that is zero, and the 10 bits returning the result.  The
+ADC does not care about these bits so we just send 0's.
+
+Now we'll pattern match the response to get the returned value. 
+
+    <<_::size(14), value::size(10)>> =
+
+We mentioned receiving and sending happen at the same time.  So we will begin 
+reading bits as soon as we send the request.  We are sending 3 bytes or 24 bits 
+so we will also receive 3 bytes or 24 bits.  We know only the last 10 bits will 
+contain the data.  So we pattern match against the first 14 bits and discard the result, 
+`_::size(14)` then we bind the last 10 bits to the variable `value`, 
+`value::size(10)`.
+
+Now our application can use the data returned from the moisture sensor.
+
+    IO.puts "Sensor #{sensor} measured #{value}"
 
 ## I2C
 
