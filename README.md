@@ -87,10 +87,13 @@ resister connected.
 
 If you're not familiar with pull up or pull down
 resisters, they're resisters whose purpose is to drive a wire
-high or low when the button isn't pressed. In this case, it drives the
-wire low. Many processors have ways of configuring internal resisters
-to accomplish the same effect without needing to add an external resister.
-It's platform-dependent and not shown here.
+high or low when the button isn't pressed. Without the resistor, the circuit may
+be left in a floating (or high impedance) state. The high-impedance state occurs 
+when the pin is not pulled to a high or low logic level, but is left “floating” 
+instead. The floating state may be misinterpreted by the microprocessor.  In 
+this case, it drives the wire low. Many processors have ways of configuring 
+internal resisters to accomplish the same effect without needing to add an 
+external resister.  It's platform-dependent and not shown here.
 
 The code looks like this in `elixir_ale`:
 
@@ -143,7 +146,7 @@ signal can be read by the main processor running Linux (e.g. Raspberry Pi.)
 A Raspberry Pi can't read an analog signal, so it needs an ADC to convert the
 signal to digital.
 
-UPDATED SCHEMATIC?
+TODO UPDATED SCHEMATIC?
 
 ![SPI schematic](assets/images/schematic-adc.png)
 
@@ -151,18 +154,59 @@ The protocol for talking to the ADC can be found on the MCP3008 data sheet
 which you will find on the [MCP3008 product page](http://www.microchip.com/wwwproducts/en/MCP3008).  If 
 you are new to hardware, a data sheet can be intimidating but they become
 much easier to read once you know what you are looking for.  The protocol
-is very similar to an application program interface (API) in the software world.  
+is very similar to an application program interface (API) in the software world.
 
-In the case of the MCP3008, the protocol is found in section 5.0 "SERIAL
+In the case of the MCP3008, the protocol is found in section 5.0 "SERIAL 
 COMMUNICATION" on page 19.  The protocol will tell you the position and 
-function of the bits you will send to the ADC, along with how the data (in the
-form of bits) will be returned. 
+function of the bits you will send to the ADC, along with how the data (in the 
+form of bits) will be returned.
 
-Figure 5-1 on pg 20 shows 4 lines, CS (chip select), CLK (clock), DIN (data in), and 
-DOUT (data out).  We'll look at the DIN line first to determine what to send.  Then 
-we'll look at the DOUT line to determine what we will receive.
+Figure 5-1 on pg 20 will help us figure out the protocol.  It shows 4 lines, CS 
+(chip select), CLK (clock), DIN (data in), and DOUT (data out).  We'll look at 
+the DIN line first to determine what to send.  Then we'll look at the DOUT line 
+to determine what we will receive (DOUT label is covered by the "1 Start bit" 
+box.
 
-TODO INSERT & DESCRIBE HOW TO READ FIGURE 5-1, SEE JOY OF HARDWARE SLIDES
+![MCP3008 Data Sheet figure 5.1](assets/images/mcp3008-figure-5-1.PNG)
+
+The DIN line describes what the request should look like.  It should have 1 
+start bit, 1 mode bit, and 3 input address bits to select a channel.  The 
+MCP3008 has 8 (0-7) channels to which you can connect a sensor.  These are 
+described in greater detail in table 5.2 on page 19.
+
+![MCP3008 Data Sheet table 5.2](assets/images/mcp3008-table-5-2.PNG)
+
+For the sample below, we want to send a single-ended mode request to the 
+channel 2 (CH2) sensor.  So we need a start bit `1`, a `1` bit for the mode, and 
+3 bits, `010`, to select the sensor.  By comparing the DIN and DOUT lines to 
+the CLK line, you can tell there is 1 bit between the response and request.  For 
+that bit and the remaining bits, the DIN doesn't care.  We will send `0`
+bits in these places for the request.
+
+Now we move down to the response in the DOUT line.  We can see it begins with 
+a null bit `0` and then there are 10 bits of data.  The response is going to 
+be a binary number with a minumum value of 0 and a maximum value of 1023.  1023
+ is the maximum binary number that can be represented using 10 bits.
+
+We mentioned receiving and sending happen at the same time.  So we will begin 
+reading bits as soon as we send the request.  We will also send bits covering 
+the entire request/response cycle.  So our protocol (i.e. API) contains 5 bits 
+in the request, 1 bit between the request and response, 1 null bit, and 10 bits 
+of data.  Our protocol contains a total of 17 bits.
+
+However, we have a problem.  Our Raspberry Pi, along with most microcontrollers, 
+can only send requests using bytes (8 bits.)  We are 1 bit over a 2 byte 
+message.  Luckily the data sheet provides a solution to this problem in 
+section 6.0 APPLICATIONS INFORMATION.  The section goes into greater detail, 
+but figure 6.1 tell us how to modify the request/response to resolve the issue.
+
+![MCP3008 Data Sheet figure 6.1](assets/images/mcp3008-figure-6-1.PNG)
+
+The MCU Transmitted Data row tells us to send 7 `0` bits before the start 
+bit.  Combined with our 17 bit request/response communication, this will give us a 
+total of 24 bits and 3 bytes.  We can see from the MCU Received Data row we'll 
+need to take those 7 bits into account when we receive the data, but we'll also 
+receive 24 bits or 3 bytes.
 
 Using the protocol from the data sheet here is how we will read the moisture 
 sensor.
@@ -180,19 +224,30 @@ sensor.
     iex> sensor = 2 #Try the CH2 sensor
     iex> <<_::size(14), value::size(10)>> =
            SPI.transfer(pid, <<0x01, mode::size(1), sensor::size(3), 0::size(12)>>)
-    "NEED WHAT IT RETURNS"
+    TODO "NEED WHAT IT RETURNS"
 
     iex> IO.puts "Sensor #{sensor} measured #{value}"
-    "NEED WHAT IT RETURNS"
+    TODO "NEED WHAT IT RETURNS"
 
-If you are new to using Elixir for embedded, there are a couple things here you 
+If you are new to using Elixir for embedded, there may be some things here you 
 might not be familiar with.  We'll be working with bit strings.  If this is 
 new to you, you might want to refer to the 
 [Elixir docs for bitstings](https://hexdocs.pm/elixir/Kernel.SpecialForms.html#%3C%3C%3E%3E/1).
 
-TODO DISCUSS START LINK...WHY "spidev0.0"?
+First we call SPI.start_link with Linux spidev device driver as it argument.  
+We pattern match with `{:ok, pid}` so we can use `pid` in the 
+SPI.transfer call next.
 
-Next we'll make a call to SPI.transfer.
+    {:ok, pid} = SPI.start_link("spidev0.0")
+
+Elixir ALE uses the Linux spidev device driver for communicating with SPI 
+devices. It creates files in /dev for each SPI interface that it knows about. 
+Many boards only have one SPI interface and it shows up as /dev/spidev0.0. 
+The easiest way to find out the right name is to run ls spidev* in the /dev 
+directory. If nothing shows up, it is likely that the spidev driver needs to 
+be loaded. Try running modprobe spidev or consult your board's documentation.
+
+Next we'll make a call to SPI.transfer to read the moisture sensor.
 
     SPI.transfer(pid, <<0x01, mode::size(1), sensor::size(3), 0::size(12)>>)
 
@@ -204,25 +259,27 @@ common to describe bytes using hexadecimal notation.
 The next bit will be for the mode which we have set to 1 for Single-ended mode.
 
 TODO:  The slides say 0 for Single-ended mode, but that doesnt' seem to match 
-the data sheet.
+the data sheet. Need to verify which is correct.
 
-Next we will send 3 bits to select the sensor on channel 2.  You can see in 
+Next we will send 3 bits to select the sensor on channel 2.  As we found above in 
 Table 5-2 on pg 19 of the data sheet `010` will select channel 2 
-(CH2).  `2::size(3)` is equivalent to `010`.
+(CH2).  `2::size(3)` is equivalent to `010` and sends the binary number 2 
+using 3 bits.  We could send 2 in binary using 2 bits `10`, but we need 3 bits 
+to comply with the protocol.
 
 Finally we include 12 bits corresponding with the 1 bit between request & 
-response, the 1 bit that is zero, and the 10 bits returning the result.  The
-ADC does not care about these bits so we just send 0's.
+response, the 1 null bit that is zero, and the 10 bits returning the result.  The
+ADC does not care about these bits so we just send 12 `0` bits.
 
 Now we'll pattern match the response to get the returned value. 
 
     <<_::size(14), value::size(10)>> =
 
-We mentioned receiving and sending happen at the same time.  So we will begin 
+As we said above, receiving and sending happen at the same time.  So we will begin 
 reading bits as soon as we send the request.  We are sending 3 bytes or 24 bits 
 so we will also receive 3 bytes or 24 bits.  We know only the last 10 bits will 
-contain the data.  So we pattern match against the first 14 bits and discard the result, 
-`_::size(14)` then we bind the last 10 bits to the variable `value`, 
+contain the data.  So we pattern match against the first 14 bits and discard 
+the result, `_::size(14)` then we bind the last 10 bits to the variable `value`, 
 `value::size(10)`.
 
 Now our application can use the data returned from the moisture sensor.
