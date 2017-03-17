@@ -26,7 +26,7 @@ Elixir library. Normally, you would include elixir_ale as a dependency in your
 `mix.exs` like this:
 
     def deps do
-      [{:elixir_ale, "~> 0.5.7"}]
+      [{:elixir_ale, "~> 0.6.0"}]
     end
 
 If you just want to try it out, you can do the following:
@@ -136,12 +136,12 @@ on CH0 or a potentiometer on CH1.
 ![SPI schematic](assets/images/schematic-adc.png)
 
 The protocol for talking to the ADC is described in the [MCP3002](http://www.microchip.com/wwwproducts/en/MCP3002) data sheet.
-See Figure 6-1 in the data sheet for the communication protocol. Sending a 
+See Figure 6-1 in the data sheet for the communication protocol. Sending a
 0x60 first reads the temperature and sending a 0x70 reads the
 potentiometer. Since the data sheet shows bits, 0x60 corresponds to 01100000b.
 The leftmost bit is the "Start" bit. The second bit is SGL/DIFF and the third
 bit is ODD/SIGN. From table 5-1, if SGL/DIFF==1 and ODD/SIGN==0, then that
-specifies channel 0 which is connected to the thermometer. 
+specifies channel 0 which is connected to the thermometer.
 
     # Make sure that you've enabled or loaded the SPI driver or this will
     # fail.

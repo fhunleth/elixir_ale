@@ -1,13 +1,13 @@
 # Changelog
 
-## v0.6.0-dev
+## v0.6.0
 
 *Backwards incompatible changes*
 
-This release modernizes the naming of every module. All modules have been
-placed in the `ElixirALE` namespace and capitalized since they're acronyms.
-For example, if you were using the `I2c` module, you'll need to `alias ElixirALE.I2C`
-and then search and replace `I2c` to `I2C`. The other modules are similar.
+This release cleans up the naming of every module. All modules are now
+in the `ElixirALE` namespace and capitalized since they're acronyms.
+For example, if you were using the `I2c` module, it's now `ElixirALE.I2C`.
+You may want to `alias ElixirALE.I2C`.
 
 ## v0.5.7
 

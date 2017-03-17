@@ -3,7 +3,7 @@ defmodule ElixirAle.Mixfile do
 
   def project do
     [app: :elixir_ale,
-     version: "0.6.0-dev",
+     version: "0.6.0",
      elixir: "~> 1.2",
      name: "elixir_ale",
      description: description(),
@@ -22,7 +22,7 @@ defmodule ElixirAle.Mixfile do
 
   defp description do
     """
-    Elixir access to hardware I/O interfaces such as GPIO, I2C, and SPI.
+    Elixir access to hardware GPIO, I2C, and SPI interfaces.
     """
   end
 
