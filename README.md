@@ -81,15 +81,15 @@ To turn on the LED that's connected to the net (or wire) labeled
     :ok
 
 Input works similarly. Here's an example of a button with a pull down
-resister connected.
+resistor connected.
 
 ![GPIO Button schematic](assets/images/schematic-gpio-button.png)
 
 If you're not familiar with pull up or pull down
-resisters, they're resisters whose purpose is to drive a wire
+resistors, they're resistors whose purpose is to drive a wire
 high or low when the button isn't pressed. In this case, it drives the
-wire low. Many processors have ways of configuring internal resisters
-to accomplish the same effect without needing to add an external resister.
+wire low. Many processors have ways of configuring internal resistors
+to accomplish the same effect without needing to add an external resistor.
 It's platform-dependent and not shown here.
 
 The code looks like this in `elixir_ale`:
