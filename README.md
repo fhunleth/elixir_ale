@@ -267,9 +267,9 @@ Please share other examples if you have them.
 
 The most common issue is getting connected to a part the first time. If you're
 having trouble, check that the device files exist in the `/dev` directory for I2C
-and SPI. GPIOs are usually come up easier, but their corresponding files are in
-`/sys/class/gpio`. Are ARM-based boards, it is common to need to specify a
-device tree file to the Linux kernel that specifies whether pins on I2C, SPI, or
+and SPI. GPIOs usually come up easier, but their corresponding files are in
+`/sys/class/gpio`. On ARM-based boards, it is common to need to specify a
+device tree file to the Linux kernel that specifies whether pins are I2C, SPI, or
 GPIOs. Some boards also support device tree overlays that can be installed at
 run time to change the usage of pins (the BeagleBone Black is a good example of
 this. See the [Universal I/O
