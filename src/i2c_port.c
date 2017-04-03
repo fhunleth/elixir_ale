@@ -41,7 +41,7 @@
 #define debug(...)
 #endif
 
-#define I2C_BUFFER_MAX 512
+#define I2C_BUFFER_MAX 8192
 
 struct i2c_info
 {
