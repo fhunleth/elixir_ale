@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.1
+
+  * Bug fixes
+    * Enlarge I2C buffer size to support some OLED displays
+    * Support compilation on non-Linux platforms. It won't work, but this makes
+      it possible to have unconditional deps on elixir_ale in projects.
+
 ## v0.6.0
 
 *Backwards incompatible changes*
