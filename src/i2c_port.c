@@ -107,6 +107,86 @@ static int i2c_transfer(const struct i2c_info *i2c,
         return 1;
 }
 
+static void i2c_handle_read(struct i2c_info *i2c, unsigned int addr,
+                            const char *req, int *req_index,
+                            char *resp, int *resp_index)
+{
+    long int len;
+    if (ei_decode_long(req, req_index, &len) < 0 ||
+        len < 1 ||
+        len > I2C_BUFFER_MAX)
+        errx(EXIT_FAILURE, "read amount: min=1, max=%d", I2C_BUFFER_MAX);
+
+    char data[I2C_BUFFER_MAX];
+    if (i2c_transfer(i2c, addr, 0, 0, data, len))
+        ei_encode_binary(resp, resp_index, data, len);
+    else {
+        ei_encode_tuple_header(resp, resp_index, 2);
+        ei_encode_atom(resp, resp_index, "error");
+        ei_encode_atom(resp, resp_index, "i2c_read_failed");
+    }
+}
+
+static void i2c_handle_write(struct i2c_info *i2c, unsigned int addr,
+                             const char *req, int *req_index,
+                             char *resp, int *resp_index)
+{
+    char data[I2C_BUFFER_MAX];
+    int len;
+    int type;
+    long llen;
+    if (ei_get_type(req, req_index, &type, &len) < 0 ||
+        type != ERL_BINARY_EXT ||
+        len < 1 ||
+        len > I2C_BUFFER_MAX ||
+        ei_decode_binary(req, req_index, &data, &llen) < 0)
+        errx(EXIT_FAILURE, "write: need a binary between 1 and %d bytes", I2C_BUFFER_MAX);
+
+    if (i2c_transfer(i2c, addr, data, len, 0, 0))
+        ei_encode_atom(resp, resp_index, "ok");
+    else {
+        ei_encode_tuple_header(resp, resp_index, 2);
+        ei_encode_atom(resp, resp_index, "error");
+        ei_encode_atom(resp, resp_index, "i2c_write_failed");
+    }
+}
+
+static void i2c_handle_wrrd(struct i2c_info *i2c, unsigned int addr,
+                            const char *req, int *req_index,
+                            char *resp, int *resp_index)
+{
+    char write_data[I2C_BUFFER_MAX];
+    char read_data[I2C_BUFFER_MAX];
+    int write_len;
+    long int read_len;
+    int type;
+    long llen;
+    int arity;
+
+    if (ei_decode_tuple_header(req, req_index, &arity) < 0 ||
+        arity != 2)
+        errx(EXIT_FAILURE, "wrrd: expecting {write_data, read_count} tuple");
+
+    if (ei_get_type(req, req_index, &type, &write_len) < 0 ||
+        type != ERL_BINARY_EXT ||
+        write_len < 1 ||
+        write_len > I2C_BUFFER_MAX ||
+        ei_decode_binary(req, req_index, write_data, &llen) < 0)
+        errx(EXIT_FAILURE, "wrrd: need a binary between 1 and %d bytes", I2C_BUFFER_MAX);
+    if (ei_decode_long(req, req_index, &read_len) < 0 ||
+        read_len < 1 ||
+        read_len > I2C_BUFFER_MAX)
+        errx(EXIT_FAILURE, "wrrd: read amount: min=1, max=%d", I2C_BUFFER_MAX);
+
+    if (i2c_transfer(i2c, addr, write_data, write_len, read_data, read_len))
+        ei_encode_binary(resp, resp_index, read_data, read_len);
+    else {
+        ei_encode_tuple_header(resp, resp_index, 2);
+        ei_encode_atom(resp, resp_index, "error");
+        ei_encode_atom(resp, resp_index, "i2c_wrrd_failed");
+    }
+}
+
 static void i2c_handle_request(const char *req, void *cookie)
 {
     struct i2c_info *i2c = (struct i2c_info *) cookie;
@@ -135,71 +215,11 @@ static void i2c_handle_request(const char *req, void *cookie)
     int resp_index = sizeof(uint16_t); // Space for payload size
     ei_encode_version(resp, &resp_index);
     if (strcmp(cmd, "read") == 0) {
-
-        long int len;
-        if (ei_decode_long(req, &req_index, &len) < 0 ||
-                len < 1 ||
-                len > I2C_BUFFER_MAX)
-            errx(EXIT_FAILURE, "read amount: min=1, max=%d", I2C_BUFFER_MAX);
-
-        char data[I2C_BUFFER_MAX];
-
-        if (i2c_transfer(i2c, addr, 0, 0, data, len))
-            ei_encode_binary(resp, &resp_index, data,len);
-        else {
-            ei_encode_tuple_header(resp, &resp_index, 2);
-            ei_encode_atom(resp, &resp_index, "error");
-            ei_encode_atom(resp, &resp_index, "i2c_read_failed");
-        }
+        i2c_handle_read(i2c, addr, req, &req_index, resp, &resp_index);
     } else if (strcmp(cmd, "write") == 0) {
-        char data[I2C_BUFFER_MAX];
-        int len;
-        int type;
-        long llen;
-        if (ei_get_type(req, &req_index, &type, &len) < 0 ||
-                type != ERL_BINARY_EXT ||
-                len < 1 ||
-                len > I2C_BUFFER_MAX ||
-                ei_decode_binary(req, &req_index, &data, &llen) < 0)
-            errx(EXIT_FAILURE, "write: need a binary between 1 and %d bytes", I2C_BUFFER_MAX);
-
-        if (i2c_transfer(i2c, addr, data, len, 0, 0))
-            ei_encode_atom(resp, &resp_index, "ok");
-        else {
-            ei_encode_tuple_header(resp, &resp_index, 2);
-            ei_encode_atom(resp, &resp_index, "error");
-            ei_encode_atom(resp, &resp_index, "i2c_write_failed");
-        }
+        i2c_handle_write(i2c, addr, req, &req_index, resp, &resp_index);
     } else if (strcmp(cmd, "wrrd") == 0) {
-        char write_data[I2C_BUFFER_MAX];
-        char read_data[I2C_BUFFER_MAX];
-        int write_len;
-        long int read_len;
-        int type;
-        long llen;
-
-        if (ei_decode_tuple_header(req, &req_index, &arity) < 0 ||
-            arity != 2)
-            errx(EXIT_FAILURE, "wrrd: expecting {write_data, read_count} tuple");
-
-        if (ei_get_type(req, &req_index, &type, &write_len) < 0 ||
-                type != ERL_BINARY_EXT ||
-                write_len < 1 ||
-                write_len > I2C_BUFFER_MAX ||
-                ei_decode_binary(req, &req_index, &write_data, &llen) < 0)
-            errx(EXIT_FAILURE, "wrrd: need a binary between 1 and %d bytes", I2C_BUFFER_MAX);
-        if (ei_decode_long(req, &req_index, &read_len) < 0 ||
-                read_len < 1 ||
-                read_len > I2C_BUFFER_MAX)
-            errx(EXIT_FAILURE, "wrrd: read amount: min=1, max=%d", I2C_BUFFER_MAX);
-
-        if (i2c_transfer(i2c, addr, write_data, write_len, read_data, read_len))
-            ei_encode_binary(resp, &resp_index, read_data, read_len);
-        else {
-            ei_encode_tuple_header(resp, &resp_index, 2);
-            ei_encode_atom(resp, &resp_index, "error");
-            ei_encode_atom(resp, &resp_index, "i2c_wrrd_failed");
-        }
+        i2c_handle_wrrd(i2c, addr, req, &req_index, resp, &resp_index);
     } else
         errx(EXIT_FAILURE, "unknown command: %s", cmd);
 
