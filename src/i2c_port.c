@@ -131,7 +131,7 @@ static void i2c_handle_request(const char *req, void *cookie)
             addr > 127)
         errx(EXIT_FAILURE, "addr: min=0, max=127");
 
-    char resp[1024]; // Must be larger than I2C_BUFFER_MAX
+    char resp[I2C_BUFFER_MAX + 64]; // Largest response contains an I2C_BUFFER_MAX-sized buffer
     int resp_index = sizeof(uint16_t); // Space for payload size
     ei_encode_version(resp, &resp_index);
     if (strcmp(cmd, "read") == 0) {
