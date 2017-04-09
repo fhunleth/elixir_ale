@@ -62,7 +62,8 @@ other embedded Linux platforms.
 
 ## GPIO
 
-A GPIO is just a wire that you can use as an input or an output. It can only be
+A [General Purpose Input/Output](https://en.wikipedia.org/wiki/General-purpose_input/output) (GPIO) 
+is just a wire that you can use as an input or an output. It can only be
 one of two values, 0 or 1. A 1 corresponds to a logic high voltage like 3.3 V
 and a 0 corresponds to 0 V. The actual voltage depends on the hardware.
 
@@ -117,31 +118,47 @@ If you'd like to get a message when the button is pressed or released, call the
     {:gpio_interrupt, 17, :falling}
     :ok
 
-Note that after calling `set_int`, the calling process will receive an initial message with the state of the pin.
-This prevents the race condition between getting the initial state of the pin and turning on interrupts. Without it, you could get the state of the pin, it could change states, and then you could start waiting on it for interrupts. If that happened, you would be out of sync.
+Note that after calling `set_int`, the calling process will receive an initial 
+message with the state of the pin. This prevents the race condition between 
+getting the initial state of the pin and turning on interrupts. Without it, 
+you could get the state of the pin, it could change states, and then you could 
+start waiting on it for interrupts. If that happened, you would be out of sync.
 
 ## SPI
 
-A SPI bus is a common multi-wire bus used to connect components on a circuit
-board. A clock line drives the timing of sending bits between components. Bits
-on the `MOSI` line go from the master (usually the processor running Linux) to
-the slave, and bits on the `MISO` line go the other direction. Bits transfer
-both directions simultaneously. However, much of the time, the protocol used
-across the SPI bus has a request followed by a response and in these cases, bits
-going the "wrong" direction are ignored.
+A [Serial Peripheral Interface](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus) 
+(SPI) bus is a common multi-wire bus used to connect components on a circuit 
+board. A clock line drives the timing of sending bits between components. Bits 
+on the Master Out Slave In `MOSI` line go from the master (usually the 
+processor running Linux) to the slave, and bits on the Master In Slave Out 
+`MISO` line go the other direction. Bits transfer both directions 
+simultaneously. However, much of the time, the protocol used across the SPI 
+bus has a request followed by a response and in these cases, bits going the 
+"wrong" direction are ignored. This will become more clear in the example below.
 
-The following shows an example ADC that reads from either a temperature sensor
-on CH0 or a potentiometer on CH1.
+The following shows an example Analog to Digital Converter (ADC) that 
+reads from either a temperature sensor on CH0 (channel 0) or a potentiometer on 
+CH1 (channel 1). It converts the analog measurements to digital, and sends the 
+digital measurements to SPI pins on the main processor running Linux (e.g. 
+Raspberry Pi). Many processors, like the one on the Raspberry Pi, can't read 
+analog signals directly, so they need an ADC to convert the signal.
 
 ![SPI schematic](assets/images/schematic-adc.png)
 
-The protocol for talking to the ADC is described in the [MCP3002](http://www.microchip.com/wwwproducts/en/MCP3002) data sheet.
+The protocol for talking to the ADC in the example below is described in the 
+[MCP3002](http://www.microchip.com/wwwproducts/en/MCP3002) data sheet. The 
+protocol is very similar to an application program interface (API) for 
+software. It will tell you the position and function of the bits you will send 
+to the ADC, along with how the data (in the form of bits) 
+will be returned.
+
 See Figure 6-1 in the data sheet for the communication protocol. Sending a
-0x60 first reads the temperature and sending a 0x70 reads the
-potentiometer. Since the data sheet shows bits, 0x60 corresponds to 01100000b.
-The leftmost bit is the "Start" bit. The second bit is SGL/DIFF and the third
-bit is ODD/SIGN. From table 5-1, if SGL/DIFF==1 and ODD/SIGN==0, then that
-specifies channel 0 which is connected to the thermometer.
+`0x68` first reads the temperature and sending a `0x78` reads the
+potentiometer. Since the data sheet shows bits, `0x68` corresponds to `01101000b`.
+The leftmost bit is the "Start" bit. The second bit is SGL/DIFF, the third
+bit is ODD/SIGN, and the fourth bit is MSBF. From table 5-1, if SGL/DIFF==1, 
+ODD/SIGN==0, and MSBF==1 then that specifies channel 0 which is connected to 
+the thermometer.
 
     # Make sure that you've enabled or loaded the SPI driver or this will
     # fail.
@@ -152,8 +169,81 @@ specifies channel 0 which is connected to the thermometer.
     # Read the potentiometer
 
     # Use binary pattern matching to pull out the ADC counts (low 10 bits)
-    iex> <<_::size(6), counts::size(10)>> = SPI.transfer(pid, <<0x70, 0x00>>)
+    iex> <<_::size(6), counts::size(10)>> = SPI.transfer(pid, <<0x78, 0x00>>)
     <<1, 197>>
+
+    iex> counts
+    453
+
+    # Convert counts to volts (1023 = 3.3 V)
+    iex> volts = counts / 1023 * 3.3
+    1.461290322580645
+
+Since many people coming to `elixir_ale` may be new to reading data sheets 
+and working with bitstrings, the following is a more detailed explanation.
+
+    {:ok, pid} = SPI.start_link("spidev0.0")
+
+`elixir_ale` uses the Linux spidev device driver for communicating with SPI 
+devices. It creates files in /dev for each SPI interface that it knows about. 
+Many boards only have one SPI interface and it shows up as /dev/spidev0.0. 
+The easiest way to find out the right name is to run `ls spidev*` in the /dev 
+directory. If nothing shows up, it is likely that the spidev driver needs to 
+be loaded. Try running modprobe spidev or consult your board's documentation.
+
+Next we'll make a call to SPI.transfer to read the potentiometer.
+
+    SPI.transfer(pid, <<0x78, 0x00>>)
+
+As mentioned above, the protocol for talking to the ADC is described in the 
+[MCP3002](http://www.microchip.com/wwwproducts/en/MCP3002) data sheet. See 
+Figure 6-1, the request protocol is labelled "MCU Transmitted Data." The 
+leftmost bit is the "Start" bit. The second bit is SGL/DIFF, the third bit is 
+ODD/SIGN, and the fourth bit is MSBF. You may notice a `x` before the start 
+bit which represents a leading `0`.  This is often done when dealing with 
+microcontroller-based SPI ports that must send 8 bits at a time. The request 
+and response are happening simultaneously so the size of the request (in bits) 
+must equal the size of the response. In this case, the request consists of 4 
+bits and the response contains 11 bits (a null bit and 10 data bits) for a 
+total of 15 bits, so a leading `0` is necessary to get 16 bits.
+
+Table 5-1 explains how to configure the request bits. For example, SGL/DIFF==1 
+and ODD/SIGN==1 specifies single-ended mode from channel 1 which has been 
+connected to the potentiometer. MSBF==1 will output the result of the conversion 
+with MSBF (Most Significant Bit First.) [Here](https://en.wikipedia.org/wiki/Most_significant_bit#Most_Significant_Bit_First_vs_Least_Significant_Bit_First) is
+a brief summary of MSBF vs LSBF (Least Significant Bit First) if you are not 
+familiar with the difference. Finally, the ADC doesn't care about the 11 bits 
+at the end of the request corresponding with the response so we can just send 
+11 `0` bits at the end.
+
+Going back to Figure 6-1 with our bit configuration from Table 5-1, the complete 
+request to read the pontentiometer on channel 1 should be `01111000b 00000000b`. This 
+is often abbreviated using the hexidecimal numbers corresponding to the bits, 
+which is in this case `0x78` and `0x00`. Alternatively, sending `0x68` and `0x00` or 
+`01101000b 00000000b` would read the temperature on channel 0.
+
+Now use use binary pattern matching to pull out the ADC counts (low 10 bits).
+
+    <<_::size(6), counts::size(10)>> = 
+
+Here we're pattern matching using the size of bitstrings.  If this is new to 
+you, you might want to refer to the 
+[Elixir docs for bitstrings](https://hexdocs.pm/elixir/Kernel.SpecialForms.html#%3C%3C%3E%3E/1) or 
+run `h <<>>` at the IEx prompt.
+
+See Figure 6-1, the response protocol is labelled "MCU Received Data." As 
+mentioned above, receiving and sending happen at the same time. The 
+micro-controller unit begins reading bits as soon as it sends the request. We 
+are sending 16 bits so we will also receive 16 bits. The response will 
+start with 6 bits we don't care about. The first 5 bits correspond with the leading `0` 
+bit and 4 request bits. The last bit we don't care about is the null bit 
+beginning the response. We only care about the last 10 bits which will contain 
+the data. We can divide the bitstring into 2 segments. Pattern match against 
+the first 6 bits and discard the result, `_::size(6)` then bind the last 10 bits 
+to the variable `counts`, `counts::size(10)`.
+
+Finally, convert `counts` to `volts` to get the results in volts from the 
+potentiometer.
 
     iex> counts
     453
@@ -164,7 +254,8 @@ specifies channel 0 which is connected to the thermometer.
 
 ## I2C
 
-An I2C bus is similar to a SPI bus in function, but uses fewer wires. It
+An [Inter-Integrated Circuit](https://en.wikipedia.org/wiki/I%C2%B2C) (I2C) 
+bus is similar to a SPI bus in function, but uses fewer wires. It
 supports addressing hardware components and bidirectional use of the data line.
 
 The following shows a bus IO expander connected via I2C to the processor.
