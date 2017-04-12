@@ -206,7 +206,7 @@ Here's a simple example of using it.
 
     # By default, all 8 GPIOs are set to inputs. Set the 4 high bits to outputs
     # so that we can toggle the LEDs. (Write 0x0f to register 0x00)
-    iex> I2C.write(pid, <<0x00, 0x0f>>
+    iex> I2C.write(pid, <<0x00, 0x0f>>)
     :ok
 
     # Turn on the LED attached to bit 4 on the expander. (Write 0x10 to register
