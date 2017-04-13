@@ -1,6 +1,10 @@
 # Changelog
 
-## v0.6.2-dev
+## v0.6.2
+
+  * Bug fixes
+    * Fix message buffer size that was too small for really large I2C transfers
+    * Many documentation improvements from Axel Clark.
 
 ## v0.6.1
 
