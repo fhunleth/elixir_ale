@@ -30,6 +30,9 @@ defmodule ElixirALE.I2C do
   specified by `address`. Some I2C devices can be switched into different
   modes where they respond to an alternate address. Rather than having to
   create a second `I2c` process, see `read_device/3` and related routines.
+  If your application is interacting with many devices on the bus and
+  you're only going to call `read_device/3`, etc., then pass in any number
+  for the `i2c_address` here.
   """
   @spec start_link(binary, i2c_address, [term]) :: {:ok, pid}
   def start_link(devname, address, opts \\ []) do
@@ -104,11 +107,30 @@ defmodule ElixirALE.I2C do
   WARNING: This is intended to be a debugging aid. Reading bytes from devices
   can advance internal state machines and might cause them to get out of sync
   with other code.
+
+  ```
+  iex> ElixirALE.I2C.detect_devices("i2c-1")
+  [4]
+  ```
+
+  The return value is a list of device addresses that were detected on the
+  specified I2C bus. If you get back `'Hh'` or other letters, then IEx
+  converted the list to an Erlang string. Run `i v()` to get information about
+  the return value and look at the raw string representation for addresses.
+
+  If you already have an `ElixirALE.I2C` `GenServer` running, then you may
+  pass its `pid` to `detect_devices/1` instead.
   """
-  @spec detect_devices(pid) :: [integer]
-  def detect_devices(pid) do
+  @spec detect_devices(pid | binary) :: [integer] | {:error, term}
+  def detect_devices(pid_or_devname) when is_pid(pid_or_devname) do
     Enum.reject(0..127,
-                &(read_device(pid, &1, 1) == {:error, :i2c_read_failed}))
+                &(read_device(pid_or_devname, &1, 1) == {:error, :i2c_read_failed}))
+  end
+  def detect_devices(pid_or_devname) when is_binary(pid_or_devname) do
+    with {:ok, pid} <- start_link(pid_or_devname, 0),
+         devices = detect_devices(pid),
+         :ok <- GenServer.stop(pid),
+      do: devices
   end
 
   # gen_server callbacks
