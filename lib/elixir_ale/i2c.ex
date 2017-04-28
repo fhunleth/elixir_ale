@@ -101,6 +101,23 @@ defmodule ElixirALE.I2C do
   end
 
   @doc """
+  Return a list of available I2C bus device names.  If nothing is returned,
+  it's possible that the kernel driver for that I2C bus is not enabled or the
+  kernel's device tree is not configured. On Raspbian, run `raspi-config` and
+  look in the advanced options.
+
+  ```
+  iex> ElixirALE.I2C.device_names
+  ["i2c-1"]
+  ```
+  """
+  @spec device_names() :: [binary]
+  def device_names() do
+    Path.wildcard("/dev/i2c-*")
+    |> Enum.map(fn(p) -> String.replace_prefix(p, "/dev/", "") end)
+  end
+
+  @doc """
   Scan the I2C bus for devices by performing a read at each device address
   and returning a list of device addresses that respond.
 
