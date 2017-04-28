@@ -1,4 +1,4 @@
-defmodule ElixirAleTest do
+defmodule ElixirALETest do
   use ExUnit.Case
 
   test "the truth" do
