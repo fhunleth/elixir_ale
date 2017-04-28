@@ -288,18 +288,51 @@ Please share other examples if you have them.
 
 ### How do I debug?
 
-The most common issue is getting connected to a part the first time. If you're
-having trouble, check that the device files exist in the `/dev` directory for I2C
-and SPI. GPIOs usually come up easier, but their corresponding files are in
-`/sys/class/gpio`. On ARM-based boards, it is common to need to specify a
-device tree file to the Linux kernel that specifies whether pins are I2C, SPI, or
-GPIOs. Some boards also support device tree overlays that can be installed at
-run time to change the usage of pins (the BeagleBone Black is a good example of
-this. See the [Universal I/O
-project](https://github.com/cdsteinkuehler/beaglebone-universal-io). If
-debugging I2C, see `I2C.detect_devices/1` for scanning the whole bus for
-anything in case the device you're using is at a different address than
-expected.
+The most common issue is communicating with an I2C or SPI device for the first time.
+For I2C, first check that an I2C bus is available:
+
+```
+iex> ElixirALE.I2C.device_names
+["i2c-1"]
+```
+
+If the list is empty, then I2C is either not available, not enabled, or not
+configured in the kernel. If you're using Raspbian, run `raspi-config` and check
+that I2C is enabled in the advanced options. If you're on a BeagleBone, try
+running `config-pin` and see the [Universal I/O
+project](https://github.com/cdsteinkuehler/beaglebone-universal-io) to enable
+the I2C pins. On other ARM boards, double check that I2C is enabled in the
+kernel and that the device tree configures it.
+
+Once an I2C bus is available, try detecting devices on it:
+
+```
+iex> ElixirALE.I2C.detect_devices("i2c-1")
+[4]
+```
+
+The return value here is a list of device addresses that were detected. It is
+still possible that the device will work even if it does not detect, but you
+probably want to check wires at this point. If you have a logic analyzer, use it
+to verify that I2C transactions are being initiated on the bus.
+
+Options for debugging a SPI issue are more limited. First check that the SPI bus
+is available:
+```
+iex> ElixirALE.SPI.device_names
+["spidev0.0", "spidev0.1"]
+```
+
+If nothing is returned, verify that SPI is enabled and configured on your
+system. The steps are identical to the I2C ones above except looking for SPI.
+
+If you're having trouble with GPIOs, the files controlling them are in
+`/sys/class/gpio`. ElixirALE is a thin wrapper on the files so if something can
+be accomplished there, it usually can be accomplished in ElixirALE. One big
+omission from the directory is support for internal pull-ups and pull-downs.
+These are very convenient for buttons so that external resisters aren't needed.
+Unfortunately, the way to handle pull-ups and pull-downs is device specific. If
+you're on a Raspberry Pi, see [gpio_rpi](https://hex.pm/packages/gpio_rpi).
 
 ### Will it run on Arduino?
 
