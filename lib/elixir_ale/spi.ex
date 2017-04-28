@@ -19,6 +19,23 @@ defmodule ElixirALE.SPI do
 
   # Public API
   @doc """
+  Return a list of available SPI bus device names.  If nothing is returned,
+  it's possible that the kernel driver for that SPI bus is not enabled or the
+  kernel's device tree is not configured. On Raspbian, run `raspi-config` and
+  look in the advanced options.
+
+  ```
+  iex> ElixirALE.SPI.device_names
+  ["spidev0.0", "spidev0.1"]
+  ```
+  """
+  @spec device_names() :: [binary]
+  def device_names() do
+    Path.wildcard("/dev/spidev*")
+    |> Enum.map(fn(p) -> String.replace_prefix(p, "/dev/", "") end)
+  end
+
+  @doc """
   Start and link a SPI GenServer.
 
   SPI bus options include:
