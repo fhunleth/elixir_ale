@@ -1,6 +1,10 @@
 # Changelog
 
-## v0.6.3-dev
+## v0.7.0
+
+  * New features
+    * Added and improved helper functions for finding I2C devices and I2C and
+      SPI buses.
 
 ## v0.6.2
 
