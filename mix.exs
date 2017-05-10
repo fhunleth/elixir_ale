@@ -3,7 +3,7 @@ defmodule ElixirALE.Mixfile do
 
   def project do
     [app: :elixir_ale,
-     version: "1.0.0-dev",
+     version: "1.0.0",
      elixir: "~> 1.2",
      name: "elixir_ale",
      description: description(),

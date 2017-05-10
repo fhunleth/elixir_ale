@@ -1,6 +1,8 @@
 # Changelog
 
-## v1.0.0-dev
+## v1.0.0
+
+  * Same as v0.7.0.
 
 ## v0.7.0
 
