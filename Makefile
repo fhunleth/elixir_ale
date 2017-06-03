@@ -13,7 +13,7 @@
 ifeq ($(CROSSCOMPILE),)
     # Not crosscompiling, so check that we're on Linux.
     ifneq ($(shell uname -s),Linux)
-        $(warning Elixir ALE only works on Linux, but crosscompilion)
+        $(warning Elixir ALE only works on Linux, but crosscompilation)
         $(warning is supported by defining $$CROSSCOMPILE, $$ERL_EI_INCLUDE_DIR,)
         $(warning and $$ERL_EI_LIBDIR. See Makefile for details. If using Nerves,)
         $(warning this should be done automatically.)
@@ -42,7 +42,7 @@ ERL_LDFLAGS ?= -L$(ERL_EI_LIBDIR) -lei
 
 LDFLAGS +=
 CFLAGS ?= -O2 -Wall -Wextra -Wno-unused-parameter
-CC ?= $(CROSSCOMPILER)gcc
+CC ?= $(CROSSCOMPILE)-gcc
 
 SRC=$(wildcard src/*.c)
 OBJ=$(SRC:.c=.o)
