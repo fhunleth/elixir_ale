@@ -25,16 +25,20 @@ If you're natively compiling elixir_ale, everything should work like any other
 Elixir library. Normally, you would include elixir_ale as a dependency in your
 `mix.exs` like this:
 
-    def deps do
-      [{:elixir_ale, "~> 1.0"}]
-    end
+```elixir
+def deps do
+  [{:elixir_ale, "~> 1.0"}]
+end
+```
 
 If you just want to try it out, you can do the following:
 
-    git clone https://github.com/fhunleth/elixir_ale.git
-    cd elixir_ale
-    mix compile
-    iex -S mix
+```shell
+git clone https://github.com/fhunleth/elixir_ale.git
+cd elixir_ale
+mix compile
+iex -S mix
+```
 
 If you're cross-compiling, you'll need to setup your environment so that the
 right C compiler is called. See the `Makefile` for the variables that will need
@@ -74,12 +78,14 @@ Here's an example of turning an LED on or off:
 To turn on the LED that's connected to the net (or wire) labeled
 `GPIO18`, run the following:
 
-    iex> alias ElixirALE.GPIO
-    iex> {:ok, pid} = GPIO.start_link(18, :output)
-    {:ok, #PID<0.96.0>}
+```elixir
+iex> alias ElixirALE.GPIO
+iex> {:ok, pid} = GPIO.start_link(18, :output)
+{:ok, #PID<0.96.0>}
 
-    iex> GPIO.write(pid, 1)
-    :ok
+iex> GPIO.write(pid, 1)
+:ok
+```
 
 Input works similarly. Here's an example of a button with a pull down
 resistor connected.
@@ -95,28 +101,32 @@ It's platform-dependent and not shown here.
 
 The code looks like this in `elixir_ale`:
 
-    iex> {:ok, pid} = GPIO.start_link(17, :input)
-    {:ok, #PID<0.97.0>}
+```elixir
+iex> {:ok, pid} = GPIO.start_link(17, :input)
+{:ok, #PID<0.97.0>}
 
-    iex> GPIO.read(pid)
-    0
+iex> GPIO.read(pid)
+0
 
-    # Push the button down
+# Push the button down
 
-    iex> GPIO.read(pid)
-    1
+iex> GPIO.read(pid)
+1
+```
 
 If you'd like to get a message when the button is pressed or released, call the
 `set_int` function. You can trigger on the `:rising` edge, `:falling` edge or
 `:both`.
 
-    iex> GPIO.set_int(pid, :both)
-    :ok
+```elixir
+iex> GPIO.set_int(pid, :both)
+:ok
 
-    iex> flush
-    {:gpio_interrupt, 17, :rising}
-    {:gpio_interrupt, 17, :falling}
-    :ok
+iex> flush
+{:gpio_interrupt, 17, :rising}
+{:gpio_interrupt, 17, :falling}
+:ok
+```
 
 Note that after calling `set_int`, the calling process will receive an initial
 message with the state of the pin. This prevents the race condition between
@@ -160,24 +170,26 @@ bit is ODD/SIGN, and the fourth bit is MSBF. From table 5-1, if SGL/DIFF==1,
 ODD/SIGN==0, and MSBF==1 then that specifies channel 0 which is connected to
 the thermometer.
 
-    # Make sure that you've enabled or loaded the SPI driver or this will
-    # fail.
-    iex> alias ElixirALE.SPI
-    iex> {:ok, pid} = SPI.start_link("spidev0.0")
-    {:ok, #PID<0.124.0>}
+```elixir
+# Make sure that you've enabled or loaded the SPI driver or this will
+# fail.
+iex> alias ElixirALE.SPI
+iex> {:ok, pid} = SPI.start_link("spidev0.0")
+{:ok, #PID<0.124.0>}
 
-    # Read the potentiometer
+# Read the potentiometer
 
-    # Use binary pattern matching to pull out the ADC counts (low 10 bits)
-    iex> <<_::size(6), counts::size(10)>> = SPI.transfer(pid, <<0x78, 0x00>>)
-    <<1, 197>>
+# Use binary pattern matching to pull out the ADC counts (low 10 bits)
+iex> <<_::size(6), counts::size(10)>> = SPI.transfer(pid, <<0x78, 0x00>>)
+<<1, 197>>
 
-    iex> counts
-    453
+iex> counts
+453
 
-    # Convert counts to volts (1023 = 3.3 V)
-    iex> volts = counts / 1023 * 3.3
-    1.461290322580645
+# Convert counts to volts (1023 = 3.3 V)
+iex> volts = counts / 1023 * 3.3
+1.461290322580645
+```
 
 As shown above, you'll find out that Elixir's binary pattern matching is
 extremely convenient when working with hardware. More information can be
@@ -198,40 +210,42 @@ The protocol for talking to the IO expander is described in the [MCP23008
 Datasheet](http://www.microchip.com/wwwproducts/Devices.aspx?product=MCP23008).
 Here's a simple example of using it.
 
-    # On the Raspberry Pi, the IO expander is connected to I2C bus 1 (i2c-1).
-    # Its 7-bit address is 0x20. (see datasheet)
-    iex> alias ElixirALE.I2C
-    iex> {:ok, pid} = I2C.start_link("i2c-1", 0x20)
-    {:ok, #PID<0.102.0>}
+```Elixir
+# On the Raspberry Pi, the IO expander is connected to I2C bus 1 (i2c-1).
+# Its 7-bit address is 0x20. (see datasheet)
+iex> alias ElixirALE.I2C
+iex> {:ok, pid} = I2C.start_link("i2c-1", 0x20)
+{:ok, #PID<0.102.0>}
 
-    # By default, all 8 GPIOs are set to inputs. Set the 4 high bits to outputs
-    # so that we can toggle the LEDs. (Write 0x0f to register 0x00)
-    iex> I2C.write(pid, <<0x00, 0x0f>>)
-    :ok
+# By default, all 8 GPIOs are set to inputs. Set the 4 high bits to outputs
+# so that we can toggle the LEDs. (Write 0x0f to register 0x00)
+iex> I2C.write(pid, <<0x00, 0x0f>>)
+:ok
 
-    # Turn on the LED attached to bit 4 on the expander. (Write 0x10 to register
-    # 0x09)
-    iex> I2C.write(pid, <<0x09, 0x10>>)
-    :ok
+# Turn on the LED attached to bit 4 on the expander. (Write 0x10 to register
+# 0x09)
+iex> I2C.write(pid, <<0x09, 0x10>>)
+:ok
 
-    # Read all 11 of the expander's registers to see that the bit 0 switch is
-    # the only one on and that the bit 4 LED is on.
-    iex> I2C.write(pid, <<0>>)  # Set the next register to be read to 0
-    :ok
+# Read all 11 of the expander's registers to see that the bit 0 switch is
+# the only one on and that the bit 4 LED is on.
+iex> I2C.write(pid, <<0>>)  # Set the next register to be read to 0
+:ok
 
-    iex> I2C.read(pid, 11)
-    <<15, 0, 0, 0, 0, 0, 0, 0, 0, 17, 16>>
+iex> I2C.read(pid, 11)
+<<15, 0, 0, 0, 0, 0, 0, 0, 0, 17, 16>>
 
-    # The operation of writing one or more bytes to select a register and
-    # then reading is very common, so a shortcut is to just run the following:
-    iex> I2C.write_read(pid, <<0>>, 11)
-    <<15, 0, 0, 0, 0, 0, 0, 0, 0, 17, 16>>
+# The operation of writing one or more bytes to select a register and
+# then reading is very common, so a shortcut is to just run the following:
+iex> I2C.write_read(pid, <<0>>, 11)
+<<15, 0, 0, 0, 0, 0, 0, 0, 0, 17, 16>>
 
-    # The 17 in register 9 says that bits 0 and bit 4 are high
-    # We could have just read register 9.
+# The 17 in register 9 says that bits 0 and bit 4 are high
+# We could have just read register 9.
 
-    iex> I2C.write_read(pid, <<9>>, 1)
-    <<17>>
+iex> I2C.write_read(pid, <<9>>, 1)
+<<17>>
+```
 
 ## FAQ
 
@@ -291,7 +305,7 @@ Please share other examples if you have them.
 The most common issue is communicating with an I2C or SPI device for the first time.
 For I2C, first check that an I2C bus is available:
 
-```
+```elixir
 iex> ElixirALE.I2C.device_names
 ["i2c-1"]
 ```
@@ -306,7 +320,7 @@ kernel and that the device tree configures it.
 
 Once an I2C bus is available, try detecting devices on it:
 
-```
+```elixir
 iex> ElixirALE.I2C.detect_devices("i2c-1")
 [4]
 ```
@@ -318,7 +332,7 @@ to verify that I2C transactions are being initiated on the bus.
 
 Options for debugging a SPI issue are more limited. First check that the SPI bus
 is available:
-```
+```elixir
 iex> ElixirALE.SPI.device_names
 ["spidev0.0", "spidev0.1"]
 ```
