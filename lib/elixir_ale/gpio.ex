@@ -8,10 +8,7 @@ defmodule ElixirALE.GPIO do
 
   defmodule State do
     @moduledoc false
-    defstruct port: nil,
-              pin: 0,
-              direction: nil,
-              callbacks: []
+    defstruct port: nil, pin: 0, direction: nil, callbacks: []
   end
 
   @type pin_direction :: :input | :output
@@ -33,7 +30,7 @@ defmodule ElixirALE.GPIO do
   """
   @spec release(pid) :: :ok
   def release(pid) do
-    GenServer.cast pid, :release
+    GenServer.cast(pid, :release)
   end
 
   @doc """
@@ -44,8 +41,9 @@ defmodule ElixirALE.GPIO do
   """
   @spec write(pid, 0 | 1 | true | false) :: :ok | {:error, term}
   def write(pid, value) when is_integer(value) do
-    GenServer.call pid, {:write, value}
+    GenServer.call(pid, {:write, value})
   end
+
   def write(pid, true), do: write(pid, 1)
   def write(pid, false), do: write(pid, 0)
 
@@ -54,7 +52,7 @@ defmodule ElixirALE.GPIO do
   """
   @spec read(pid) :: :ok | {:error, term}
   def read(pid) do
-    GenServer.call pid, :read
+    GenServer.call(pid, :read)
   end
 
   @doc """
@@ -65,18 +63,22 @@ defmodule ElixirALE.GPIO do
   @spec set_int(pid, int_direction) :: :ok | {:error, term}
   def set_int(pid, direction) do
     true = pin_interrupt_condition?(direction)
-    GenServer.call pid, {:set_int, direction, self()}
+    GenServer.call(pid, {:set_int, direction, self()})
   end
 
   # gen_server callbacks
   def init([pin, pin_direction]) do
     executable = :code.priv_dir(:elixir_ale) ++ '/ale'
-    port = Port.open({:spawn_executable, executable},
-    [{:args, ["gpio", "#{pin}", Atom.to_string(pin_direction)]},
-      {:packet, 2},
-      :use_stdio,
-      :binary,
-      :exit_status])
+
+    port =
+      Port.open({:spawn_executable, executable}, [
+        {:args, ["gpio", "#{pin}", Atom.to_string(pin_direction)]},
+        {:packet, 2},
+        :use_stdio,
+        :binary,
+        :exit_status
+      ])
+
     state = %State{port: port, pin: pin, direction: pin_direction}
     {:ok, state}
   end
@@ -85,10 +87,12 @@ defmodule ElixirALE.GPIO do
     {:ok, response} = call_port(state, :read, [])
     {:reply, response, state}
   end
+
   def handle_call({:write, value}, _from, state) do
     {:ok, response} = call_port(state, :write, value)
     {:reply, response, state}
   end
+
   def handle_call({:set_int, direction, requestor}, _from, state) do
     {:ok, response} = call_port(state, :set_int, direction)
     new_callbacks = insert_unique(state.callbacks, requestor)
@@ -107,21 +111,24 @@ defmodule ElixirALE.GPIO do
 
   defp call_port(state, command, arguments) do
     msg = {command, arguments}
-    send state.port, {self(), {:command, :erlang.term_to_binary(msg)}}
+    send(state.port, {self(), {:command, :erlang.term_to_binary(msg)}})
+
     receive do
-      {_, {:data, <<?r,response::binary>>}} ->
+      {_, {:data, <<?r, response::binary>>}} ->
         {:ok, :erlang.binary_to_term(response)}
     after
-      1_000 -> :timedout
+      1000 -> :timedout
     end
   end
 
   defp handle_port({:gpio_interrupt, condition}, state) do
-    #IO.puts "Got interrupt on pin #{state.pin}, #{condition}"
+    # IO.puts "Got interrupt on pin #{state.pin}, #{condition}"
     msg = {:gpio_interrupt, state.pin, condition}
+
     for pid <- state.callbacks do
-      send pid, msg
+      send(pid, msg)
     end
+
     {:noreply, state}
   end
 

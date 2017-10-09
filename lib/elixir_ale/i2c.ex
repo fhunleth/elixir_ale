@@ -44,7 +44,7 @@ defmodule ElixirALE.I2C do
   """
   @spec release(pid) :: :ok
   def release(pid) do
-    GenServer.cast pid, :release
+    GenServer.cast(pid, :release)
   end
 
   @doc """
@@ -52,7 +52,7 @@ defmodule ElixirALE.I2C do
   """
   @spec read(pid, integer) :: binary | {:error, term}
   def read(pid, count) do
-    GenServer.call pid, {:read, count}
+    GenServer.call(pid, {:read, count})
   end
 
   @doc """
@@ -60,7 +60,7 @@ defmodule ElixirALE.I2C do
   """
   @spec write(pid, binary) :: :ok | {:error, term}
   def write(pid, data) do
-    GenServer.call pid, {:write, data}
+    GenServer.call(pid, {:write, data})
   end
 
   @doc """
@@ -69,7 +69,7 @@ defmodule ElixirALE.I2C do
   """
   @spec write_read(pid, binary, integer) :: binary | {:error, term}
   def write_read(pid, write_data, read_count) do
-    GenServer.call pid, {:wrrd, write_data, read_count}
+    GenServer.call(pid, {:wrrd, write_data, read_count})
   end
 
   @doc """
@@ -78,7 +78,7 @@ defmodule ElixirALE.I2C do
   """
   @spec read_device(pid, i2c_address, integer) :: binary | {:error, term}
   def read_device(pid, address, count) do
-    GenServer.call pid, {:read_device, address, count}
+    GenServer.call(pid, {:read_device, address, count})
   end
 
   @doc """
@@ -86,7 +86,7 @@ defmodule ElixirALE.I2C do
   """
   @spec write_device(pid, i2c_address, binary) :: :ok | {:error, term}
   def write_device(pid, address, data) do
-    GenServer.call pid, {:write_device, address, data}
+    GenServer.call(pid, {:write_device, address, data})
   end
 
   @doc """
@@ -94,10 +94,9 @@ defmodule ElixirALE.I2C do
   the specified number of bytes. This is similar to `write_read/3` except
   with an I2C device address.
   """
-  @spec write_read_device(pid, i2c_address, binary, integer) ::
-    binary | {:error, term}
+  @spec write_read_device(pid, i2c_address, binary, integer) :: binary | {:error, term}
   def write_read_device(pid, address, write_data, read_count) do
-    GenServer.call pid, {:wrrd_device, address, write_data, read_count}
+    GenServer.call(pid, {:wrrd_device, address, write_data, read_count})
   end
 
   @doc """
@@ -114,7 +113,7 @@ defmodule ElixirALE.I2C do
   @spec device_names() :: [binary]
   def device_names() do
     Path.wildcard("/dev/i2c-*")
-    |> Enum.map(fn(p) -> String.replace_prefix(p, "/dev/", "") end)
+    |> Enum.map(fn p -> String.replace_prefix(p, "/dev/", "") end)
   end
 
   @doc """
@@ -140,25 +139,29 @@ defmodule ElixirALE.I2C do
   """
   @spec detect_devices(pid | binary) :: [integer] | {:error, term}
   def detect_devices(pid_or_devname) when is_pid(pid_or_devname) do
-    Enum.reject(0..127,
-                &(read_device(pid_or_devname, &1, 1) == {:error, :i2c_read_failed}))
+    Enum.reject(0..127, &(read_device(pid_or_devname, &1, 1) == {:error, :i2c_read_failed}))
   end
+
   def detect_devices(pid_or_devname) when is_binary(pid_or_devname) do
     with {:ok, pid} <- start_link(pid_or_devname, 0),
          devices = detect_devices(pid),
          :ok <- GenServer.stop(pid),
-      do: devices
+         do: devices
   end
 
   # gen_server callbacks
   def init([devname, address]) do
     executable = :code.priv_dir(:elixir_ale) ++ '/ale'
-    port = Port.open({:spawn_executable, executable},
-      [{:args, ["i2c", "/dev/#{devname}"]},
-       {:packet, 2},
-       :use_stdio,
-       :binary,
-       :exit_status])
+
+    port =
+      Port.open({:spawn_executable, executable}, [
+        {:args, ["i2c", "/dev/#{devname}"]},
+        {:packet, 2},
+        :use_stdio,
+        :binary,
+        :exit_status
+      ])
+
     state = %State{port: port, address: address, devname: devname}
     {:ok, state}
   end
@@ -167,23 +170,27 @@ defmodule ElixirALE.I2C do
     {:ok, response} = call_port(state, :read, state.address, count)
     {:reply, response, state}
   end
+
   def handle_call({:write, data}, _from, state) do
     {:ok, response} = call_port(state, :write, state.address, data)
     {:reply, response, state}
   end
+
   def handle_call({:wrrd, write_data, read_count}, _from, state) do
-    {:ok, response} =
-        call_port(state, :wrrd, state.address, {write_data, read_count})
+    {:ok, response} = call_port(state, :wrrd, state.address, {write_data, read_count})
     {:reply, response, state}
   end
+
   def handle_call({:read_device, address, count}, _from, state) do
     {:ok, response} = call_port(state, :read, address, count)
     {:reply, response, state}
   end
+
   def handle_call({:write_device, address, data}, _from, state) do
     {:ok, response} = call_port(state, :write, address, data)
     {:reply, response, state}
   end
+
   def handle_call({:wrrd_device, address, write_data, read_count}, _from, state) do
     {:ok, response} = call_port(state, :wrrd, address, {write_data, read_count})
     {:reply, response, state}
@@ -196,11 +203,14 @@ defmodule ElixirALE.I2C do
   # Private helper functions
   defp call_port(state, command, address, arguments) do
     msg = {command, address, arguments}
-    send state.port, {self(), {:command, :erlang.term_to_binary(msg)}}
+    send(state.port, {self(), {:command, :erlang.term_to_binary(msg)}})
+
     receive do
       {_, {:data, response}} ->
         {:ok, :erlang.binary_to_term(response)}
-        _ -> :error
+
+      _ ->
+        :error
     end
   end
 end

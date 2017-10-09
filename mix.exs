@@ -2,20 +2,22 @@ defmodule ElixirALE.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :elixir_ale,
-     version: "1.0.0",
-     elixir: "~> 1.2",
-     name: "elixir_ale",
-     description: description(),
-     package: package(),
-     source_url: "https://github.com/fhunleth/elixir_ale",
-     compilers: [:elixir_make] ++ Mix.compilers,
-     make_clean: ["clean"],
-     docs: [extras: ["README.md"]],
-     aliases: ["docs": ["docs", &copy_images/1]],
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps()]
+    [
+      app: :elixir_ale,
+      version: "1.0.0",
+      elixir: "~> 1.2",
+      name: "elixir_ale",
+      description: description(),
+      package: package(),
+      source_url: "https://github.com/fhunleth/elixir_ale",
+      compilers: [:elixir_make] ++ Mix.compilers(),
+      make_clean: ["clean"],
+      docs: [extras: ["README.md"]],
+      aliases: [docs: ["docs", &copy_images/1]],
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      deps: deps()
+    ]
   end
 
   def application, do: []
@@ -27,10 +29,20 @@ defmodule ElixirALE.Mixfile do
   end
 
   defp package do
-    %{files: ["lib", "src/*.[ch]", "src/linux/i2c-dev.h", "mix.exs", "README.md", "LICENSE", "Makefile"],
+    %{
+      files: [
+        "lib",
+        "src/*.[ch]",
+        "src/linux/i2c-dev.h",
+        "mix.exs",
+        "README.md",
+        "LICENSE",
+        "Makefile"
+      ],
       maintainers: ["Frank Hunleth"],
       licenses: ["Apache-2.0"],
-      links: %{"GitHub" => "https://github.com/fhunleth/elixir_ale"}}
+      links: %{"GitHub" => "https://github.com/fhunleth/elixir_ale"}
+    }
   end
 
   defp deps do
@@ -42,6 +54,6 @@ defmodule ElixirALE.Mixfile do
 
   # Copy the images referenced by docs, since ex_doc doesn't do this.
   defp copy_images(_) do
-    File.cp_r "assets", "doc/assets"
+    File.cp_r("assets", "doc/assets")
   end
 end

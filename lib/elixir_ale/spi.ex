@@ -11,11 +11,12 @@ defmodule ElixirALE.SPI do
     defstruct port: nil, devname: nil
   end
 
+  # NOTE: for :bits_per_word, 0 is interpreted as 8-bits
   @type spi_option ::
-    {:mode, 0..3} |
-    {:bits_per_word, 0..16} |  # 0 is interpreted as 8-bits
-    {:speed_hz, pos_integer} |
-    {:delay_us, non_neg_integer}
+          {:mode, 0..3}
+          | {:bits_per_word, 0..16}
+          | {:speed_hz, pos_integer}
+          | {:delay_us, non_neg_integer}
 
   # Public API
   @doc """
@@ -32,7 +33,7 @@ defmodule ElixirALE.SPI do
   @spec device_names() :: [binary]
   def device_names() do
     Path.wildcard("/dev/spidev*")
-    |> Enum.map(fn(p) -> String.replace_prefix(p, "/dev/", "") end)
+    |> Enum.map(fn p -> String.replace_prefix(p, "/dev/", "") end)
   end
 
   @doc """
@@ -59,7 +60,7 @@ defmodule ElixirALE.SPI do
   """
   @spec release(pid) :: :ok
   def release(pid) do
-    GenServer.cast pid, :release
+    GenServer.cast(pid, :release)
   end
 
   @doc """
@@ -69,7 +70,7 @@ defmodule ElixirALE.SPI do
   """
   @spec transfer(pid, binary) :: binary | {:error, term}
   def transfer(pid, data) do
-    GenServer.call pid, {:transfer, data}
+    GenServer.call(pid, {:transfer, data})
   end
 
   # gen_server callbacks
@@ -80,17 +81,26 @@ defmodule ElixirALE.SPI do
     delay_us = Keyword.get(spi_opts, :delay_us, 10)
 
     executable = :code.priv_dir(:elixir_ale) ++ '/ale'
-    port = Port.open({:spawn_executable, executable},
-      [{:args, ["spi",
-                "/dev/#{devname}",
-                Integer.to_string(mode),
-                Integer.to_string(bits_per_word),
-                Integer.to_string(speed_hz),
-                Integer.to_string(delay_us)]},
-       {:packet, 2},
-       :use_stdio,
-       :binary,
-       :exit_status])
+
+    port =
+      Port.open({:spawn_executable, executable}, [
+        {
+          :args,
+          [
+            "spi",
+            "/dev/#{devname}",
+            Integer.to_string(mode),
+            Integer.to_string(bits_per_word),
+            Integer.to_string(speed_hz),
+            Integer.to_string(delay_us)
+          ]
+        },
+        {:packet, 2},
+        :use_stdio,
+        :binary,
+        :exit_status
+      ])
+
     state = %State{port: port, devname: devname}
     {:ok, state}
   end
@@ -107,11 +117,14 @@ defmodule ElixirALE.SPI do
   # Private helper functions
   defp call_port(state, command, arguments) do
     msg = {command, arguments}
-    send state.port, {self(), {:command, :erlang.term_to_binary(msg)}}
+    send(state.port, {self(), {:command, :erlang.term_to_binary(msg)}})
+
     receive do
       {_, {:data, response}} ->
         {:ok, :erlang.binary_to_term(response)}
-        _ -> :error
+
+      _ ->
+        :error
     end
   end
 end
