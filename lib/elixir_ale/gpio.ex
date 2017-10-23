@@ -12,7 +12,7 @@ defmodule ElixirALE.GPIO do
   end
 
   @type pin_direction :: :input | :output
-  @type int_direction :: :rising | :falling | :both
+  @type int_direction :: :rising | :falling | :both | :none
 
   # Public API
   @doc """
