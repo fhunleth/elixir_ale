@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.1
+
+  * Bug fixes
+    * Fixed typespec for `set_int/2`. Thanks to tmecklem for catching the
+      ommission.
+
+  * Improvements
+    * Various documentation and code formatting updates
+
 ## v1.0.0
 
   * Same as v0.7.0.
