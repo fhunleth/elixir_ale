@@ -50,7 +50,7 @@ defmodule ElixirALE.GPIO do
   @doc """
   Read the current value of the pin.
   """
-  @spec read(pid) :: :ok | {:error, term}
+  @spec read(pid) :: 0 | 1 | {:error, term}
   def read(pid) do
     GenServer.call(pid, :read)
   end
