@@ -23,9 +23,7 @@ defmodule ElixirALE.Mixfile do
   def application, do: []
 
   defp description do
-    """
-    Elixir access to hardware GPIO, I2C, and SPI interfaces.
-    """
+    "Elixir access to hardware GPIO, I2C, and SPI interfaces."
   end
 
   defp package do
