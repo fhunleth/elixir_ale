@@ -47,7 +47,7 @@
 #endif
 
 // Max SPI transfer size that we support
-#define SPI_TRANSFER_MAX 256
+#define SPI_TRANSFER_MAX 4096
 #if (SPI_TRANSFER_MAX + 128 > ERLCMD_BUF_SIZE)
 #error "Please bump the size of ERLCMD_BUF_SIZE to support SPI_TRANSFER_MAX"
 #endif
