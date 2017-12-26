@@ -47,7 +47,7 @@
 #endif
 
 // Max SPI transfer size that we support
-#define SPI_TRANSFER_MAX 256
+#define SPI_TRANSFER_MAX 4096
 
 struct spi_info
 {
