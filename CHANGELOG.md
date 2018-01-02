@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.0.2
+
+  * Bug fixes
+    * Fix memory overrun when using large I2C transfers. This only affected a
+      few devices since most devices maxed out at much smaller sizes. Also add
+      compile-time check to prevent this from happening again.
+
+  * Improvements
+    * Increase max SPI transfer size to 4096. This aligns it with py-spidev and
+      enables communication with the Unicorn Hat HD.
+
 ## v1.0.1
 
   * Bug fixes
