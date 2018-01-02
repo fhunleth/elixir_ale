@@ -23,8 +23,12 @@
 
 /*
  * Erlang request/response processing
+ *
+ * The buffer needs to be large enough to hold the entire command. For I2C and
+ * SPI, the commands can be pretty large so allocate enough for them plus some
+ * extra for the request type information.
  */
-#define ERLCMD_BUF_SIZE 1024
+#define ERLCMD_BUF_SIZE (8192 + 128)
 struct erlcmd
 {
     char buffer[ERLCMD_BUF_SIZE];

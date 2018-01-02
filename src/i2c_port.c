@@ -42,6 +42,9 @@
 #endif
 
 #define I2C_BUFFER_MAX 8192
+#if (I2C_BUFFER_MAX + 128 > ERLCMD_BUF_SIZE)
+#error "Please bump the size of ERLCMD_BUF_SIZE to support I2C_BUFFER_MAX"
+#endif
 
 struct i2c_info
 {
