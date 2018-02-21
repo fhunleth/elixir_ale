@@ -2,6 +2,11 @@
 
 ## v1.0.3-dev
 
+  * Bug fixes
+    * SPI GenServer no longer uses `receive` block to read data from `Port`.
+      The `receive` block was intercepting GenServer calls, and thus concurrent
+      reads to SPI would crash the GenServer.
+    
 ## v1.0.2
 
   * Bug fixes

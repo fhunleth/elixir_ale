@@ -8,7 +8,7 @@ defmodule ElixirALE.SPI do
 
   defmodule State do
     @moduledoc false
-    defstruct port: nil, devname: nil
+    defstruct port: nil, devname: nil, reply_to: nil
   end
 
   # NOTE: for :bits_per_word, 0 is interpreted as 8-bits
@@ -68,9 +68,13 @@ defmodule ElixirALE.SPI do
   send. Since SPI transfers simultaneously send and receive, the return value
   will be a binary of the same length.
   """
-  @spec transfer(pid, binary) :: binary | {:error, term}
+  @spec transfer(pid, binary) :: binary | :error
   def transfer(pid, data) do
-    GenServer.call(pid, {:transfer, data})
+    case GenServer.call(pid, {:transfer, data}) do
+      :busy -> transfer(pid, data)
+      {:ok, response} -> response
+      _ -> :error
+    end
   end
 
   # gen_server callbacks
@@ -105,26 +109,28 @@ defmodule ElixirALE.SPI do
     {:ok, state}
   end
 
-  def handle_call({:transfer, data}, _from, state) do
-    {:ok, response} = call_port(state, :transfer, data)
-    {:reply, response, state}
+  def handle_call({:transfer, data}, from, state = %{reply_to: nil}) do
+    call_port(state, :transfer, data)
+    {:noreply, %{state | reply_to: from}}
+  end
+
+  def handle_call({:transfer, _data}, _from, state) do
+    {:reply, :busy, state}
   end
 
   def handle_cast(:release, state) do
     {:stop, :normal, state}
   end
 
+  def handle_info({_port, {:data, response}}, state) do
+    data = :erlang.binary_to_term(response)
+    GenServer.reply(state.reply_to, {:ok, data})
+    {:noreply, %{state | reply_to: nil}}
+  end
+
   # Private helper functions
   defp call_port(state, command, arguments) do
     msg = {command, arguments}
     send(state.port, {self(), {:command, :erlang.term_to_binary(msg)}})
-
-    receive do
-      {_, {:data, response}} ->
-        {:ok, :erlang.binary_to_term(response)}
-
-      _ ->
-        :error
-    end
   end
 end
