@@ -1,3 +1,21 @@
+defmodule ElixirALE.SPI.Port.Behaviour do
+  @callback open(String.t, list) :: port
+  @callback transfer(port, binary) :: :ok
+end
+
+defmodule ElixirALE.SPI.Port do
+  @behaviour ElixirALE.SPI.Port.Behaviour
+
+  def open(executable, options) do
+    Port.open({:spawn_executable, executable}, options)
+  end
+
+  def transfer(port, data) do
+    msg = {:transfer, data}
+    send(port, {self(), {:command, :erlang.term_to_binary(msg)}})
+  end
+end
+
 defmodule ElixirALE.SPI do
   use GenServer
 
@@ -83,7 +101,7 @@ defmodule ElixirALE.SPI do
     executable = :code.priv_dir(:elixir_ale) ++ '/ale'
 
     port =
-      Port.open({:spawn_executable, executable}, [
+      port().open(executable, [
         {
           :args,
           [
@@ -106,7 +124,7 @@ defmodule ElixirALE.SPI do
   end
 
   def handle_call({:transfer, data}, _from, state) do
-    {:ok, response} = call_port(state, :transfer, data)
+    {:ok, response} = transfer_port(state, data)
     {:reply, response, state}
   end
 
@@ -115,16 +133,14 @@ defmodule ElixirALE.SPI do
   end
 
   # Private helper functions
-  defp call_port(state, command, arguments) do
-    msg = {command, arguments}
-    send(state.port, {self(), {:command, :erlang.term_to_binary(msg)}})
+  defp transfer_port(state, arguments) do
+    port().transfer(state.port, arguments)
 
     receive do
       {_, {:data, response}} ->
         {:ok, :erlang.binary_to_term(response)}
-
-      _ ->
-        :error
     end
   end
+
+  defp port, do: Application.get_env(:elixir_ale, :spi_port, Port)
 end
