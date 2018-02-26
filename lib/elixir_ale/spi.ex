@@ -1,9 +1,11 @@
 defmodule ElixirALE.SPI.Port.Behaviour do
+  @moduledoc "A behaviour for testing SPI"
   @callback open(String.t, list) :: port
   @callback transfer(port, binary) :: :ok
 end
 
 defmodule ElixirALE.SPI.Port do
+  @moduledoc "The default implementation for ElixirALE.SPI.Port.Behaviour"
   @behaviour ElixirALE.SPI.Port.Behaviour
 
   def open(executable, options) do
