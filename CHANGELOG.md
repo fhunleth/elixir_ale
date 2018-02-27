@@ -1,6 +1,14 @@
 # Changelog
 
-## v1.0.3-dev
+## v1.0.3
+
+  * Bug fixes
+    * Remove catchall receive handlers that would capture GenServer.call
+      messages when functions were called by multiple threads
+    * Timeout all port calls just in case. This hasn't been observed to my
+      knowledge, but seems like a sensable precaution. The timeout is absurdly
+      long (500 ms) so it shouldn't trigger.
+    * Pass errors detected by C code to Elixir rather than crashing
 
 ## v1.0.2
 
