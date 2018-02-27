@@ -66,7 +66,7 @@ defmodule ElixirALE.SPI do
   @doc """
   Perform a SPI transfer. The `data` should be a binary containing the bytes to
   send. Since SPI transfers simultaneously send and receive, the return value
-  will be a binary of the same length.
+  will be a binary of the same length or an error.
   """
   @spec transfer(pid, binary) :: binary | {:error, term}
   def transfer(pid, data) do
@@ -106,7 +106,7 @@ defmodule ElixirALE.SPI do
   end
 
   def handle_call({:transfer, data}, _from, state) do
-    {:ok, response} = call_port(state, :transfer, data)
+    response = call_port(state, :transfer, data)
     {:reply, response, state}
   end
 
@@ -121,10 +121,9 @@ defmodule ElixirALE.SPI do
 
     receive do
       {_, {:data, response}} ->
-        {:ok, :erlang.binary_to_term(response)}
-
-      _ ->
-        :error
+        :erlang.binary_to_term(response)
+    after
+      500 -> {:error, :timeout}
     end
   end
 end
