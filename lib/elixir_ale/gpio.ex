@@ -84,17 +84,17 @@ defmodule ElixirALE.GPIO do
   end
 
   def handle_call(:read, _from, state) do
-    {:ok, response} = call_port(state, :read, [])
+    response = call_port(state, :read, [])
     {:reply, response, state}
   end
 
   def handle_call({:write, value}, _from, state) do
-    {:ok, response} = call_port(state, :write, value)
+    response = call_port(state, :write, value)
     {:reply, response, state}
   end
 
   def handle_call({:set_int, direction, requestor}, _from, state) do
-    {:ok, response} = call_port(state, :set_int, direction)
+    response = call_port(state, :set_int, direction)
     new_callbacks = insert_unique(state.callbacks, requestor)
     state = %{state | callbacks: new_callbacks}
     {:reply, response, state}
@@ -115,9 +115,9 @@ defmodule ElixirALE.GPIO do
 
     receive do
       {_, {:data, <<?r, response::binary>>}} ->
-        {:ok, :erlang.binary_to_term(response)}
+        :erlang.binary_to_term(response)
     after
-      1000 -> :timedout
+      500 -> :timedout
     end
   end
 

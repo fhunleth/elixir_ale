@@ -167,32 +167,32 @@ defmodule ElixirALE.I2C do
   end
 
   def handle_call({:read, count}, _from, state) do
-    {:ok, response} = call_port(state, :read, state.address, count)
+    response = call_port(state, :read, state.address, count)
     {:reply, response, state}
   end
 
   def handle_call({:write, data}, _from, state) do
-    {:ok, response} = call_port(state, :write, state.address, data)
+    response = call_port(state, :write, state.address, data)
     {:reply, response, state}
   end
 
   def handle_call({:wrrd, write_data, read_count}, _from, state) do
-    {:ok, response} = call_port(state, :wrrd, state.address, {write_data, read_count})
+    response = call_port(state, :wrrd, state.address, {write_data, read_count})
     {:reply, response, state}
   end
 
   def handle_call({:read_device, address, count}, _from, state) do
-    {:ok, response} = call_port(state, :read, address, count)
+    response = call_port(state, :read, address, count)
     {:reply, response, state}
   end
 
   def handle_call({:write_device, address, data}, _from, state) do
-    {:ok, response} = call_port(state, :write, address, data)
+    response = call_port(state, :write, address, data)
     {:reply, response, state}
   end
 
   def handle_call({:wrrd_device, address, write_data, read_count}, _from, state) do
-    {:ok, response} = call_port(state, :wrrd, address, {write_data, read_count})
+    response = call_port(state, :wrrd, address, {write_data, read_count})
     {:reply, response, state}
   end
 
@@ -207,10 +207,9 @@ defmodule ElixirALE.I2C do
 
     receive do
       {_, {:data, response}} ->
-        {:ok, :erlang.binary_to_term(response)}
-
-      _ ->
-        :error
+        :erlang.binary_to_term(response)
+    after
+      500 -> {:error, :timeout}
     end
   end
 end
