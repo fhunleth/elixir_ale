@@ -55,7 +55,7 @@ defmodule ElixirAle.MixProject do
     File.cp_r("assets", "doc/assets")
   end
 
-  defp format_c(_) do
+  defp format_c([]) do
     astyle =
       System.find_executable("astyle") ||
         Mix.raise("""
@@ -64,4 +64,6 @@ defmodule ElixirAle.MixProject do
 
     System.cmd(astyle, ["-n", "src/*.c", "src/*.h"], into: IO.stream(:stdio, :line))
   end
+
+  defp format_c(_args), do: true
 end
