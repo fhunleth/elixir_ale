@@ -13,7 +13,7 @@ defmodule ElixirAle.MixProject do
       compilers: [:elixir_make] ++ Mix.compilers(),
       make_clean: ["clean"],
       docs: [extras: ["README.md"]],
-      aliases: [docs: ["docs", &copy_images/1]],
+      aliases: [docs: ["docs", &copy_images/1], format: ["format", &format_c/1]],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -53,5 +53,15 @@ defmodule ElixirAle.MixProject do
   # Copy the images referenced by docs, since ex_doc doesn't do this.
   defp copy_images(_) do
     File.cp_r("assets", "doc/assets")
+  end
+
+  defp format_c(_) do
+    astyle =
+      System.find_executable("astyle") ||
+        Mix.raise("""
+        Could not format C code since astyle is not available.
+        """)
+
+    System.cmd(astyle, ["-n", "src/*.c", "src/*.h"], into: IO.stream(:stdio, :line))
   end
 end

@@ -117,13 +117,13 @@ int gpio_init(struct gpio *pin, unsigned int pin_number, enum gpio_state dir)
        exist, we must be able to write it.
     */
     if (access(direction_path, F_OK) != -1) {
-	const char *dir_string = (dir == GPIO_OUTPUT ? "out" : "in");
+        const char *dir_string = (dir == GPIO_OUTPUT ? "out" : "in");
         /* Writing the direction fails on a Raspberry Pi in what looks
            like a race condition with exporting the GPIO. Poll until it
            works as a workaround. */
         int retries = 1000; /* Allow 1000 * 1 ms = 1 second max for retries */
         while (!sysfs_write_file(direction_path, dir_string) &&
-               retries > 0) {
+                retries > 0) {
             usleep(1000);
             retries--;
         }
@@ -324,8 +324,8 @@ int gpio_main(int argc, char *argv[])
         fdset[1].revents = 0;
 
         /* Always fill out the fdset structure, but only have poll() monitor
-     * the sysfs file if interrupts are enabled.
-     */
+        * the sysfs file if interrupts are enabled.
+        */
         int rc = poll(fdset, pin.state == GPIO_INPUT_WITH_INTERRUPTS ? 2 : 1, -1);
         if (rc < 0) {
             // Retry if EINTR

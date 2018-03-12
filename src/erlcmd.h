@@ -39,8 +39,8 @@ struct erlcmd
 };
 
 void erlcmd_init(struct erlcmd *handler,
-		 void (*request_handler)(const char *req, void *cookie),
-		 void *cookie);
+                 void (*request_handler)(const char *req, void *cookie),
+                 void *cookie);
 void erlcmd_send(char *response, size_t len);
 void erlcmd_process(struct erlcmd *handler);
 

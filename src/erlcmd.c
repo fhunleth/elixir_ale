@@ -31,8 +31,8 @@
  * @param cookie optional data to pass back to the handler
  */
 void erlcmd_init(struct erlcmd *handler,
-		 void (*request_handler)(const char *req, void *cookie),
-		 void *cookie)
+                 void (*request_handler)(const char *req, void *cookie),
+                 void *cookie)
 {
     memset(handler, 0, sizeof(*handler));
 
@@ -52,15 +52,15 @@ void erlcmd_send(char *response, size_t len)
 
     size_t wrote = 0;
     do {
-	ssize_t amount_written = write(STDOUT_FILENO, response + wrote, len - wrote);
-	if (amount_written < 0) {
-	    if (errno == EINTR)
-		continue;
+        ssize_t amount_written = write(STDOUT_FILENO, response + wrote, len - wrote);
+        if (amount_written < 0) {
+            if (errno == EINTR)
+                continue;
 
-	    err(EXIT_FAILURE, "write");
-	}
+            err(EXIT_FAILURE, "write");
+        }
 
-	wrote += amount_written;
+        wrote += amount_written;
     } while (wrote < len);
 }
 
@@ -72,17 +72,17 @@ static size_t erlcmd_try_dispatch(struct erlcmd *handler)
 {
     /* Check for length field */
     if (handler->index < sizeof(uint16_t))
-	return 0;
+        return 0;
 
     uint16_t be_len;
     memcpy(&be_len, handler->buffer, sizeof(uint16_t));
     size_t msglen = ntohs(be_len);
     if (msglen + sizeof(uint16_t) > sizeof(handler->buffer))
-	errx(EXIT_FAILURE, "Message too long");
+        errx(EXIT_FAILURE, "Message too long");
 
     /* Check whether we've received the entire message */
     if (msglen + sizeof(uint16_t) > handler->index)
-	return 0;
+        return 0;
 
     handler->request_handler(handler->buffer, handler->cookie);
 
@@ -96,32 +96,32 @@ void erlcmd_process(struct erlcmd *handler)
 {
     ssize_t amount_read = read(STDIN_FILENO, handler->buffer + handler->index, sizeof(handler->buffer) - handler->index);
     if (amount_read < 0) {
-	/* EINTR is ok to get, since we were interrupted by a signal. */
-	if (errno == EINTR)
-	    return;
+        /* EINTR is ok to get, since we were interrupted by a signal. */
+        if (errno == EINTR)
+            return;
 
-	/* Everything else is unexpected. */
-	err(EXIT_FAILURE, "read");
+        /* Everything else is unexpected. */
+        err(EXIT_FAILURE, "read");
     } else if (amount_read == 0) {
-	/* EOF. Erlang process was terminated. This happens after a release or if there was an error. */
-	exit(EXIT_SUCCESS);
+        /* EOF. Erlang process was terminated. This happens after a release or if there was an error. */
+        exit(EXIT_SUCCESS);
     }
 
     handler->index += amount_read;
     for (;;) {
-	size_t bytes_processed = erlcmd_try_dispatch(handler);
+        size_t bytes_processed = erlcmd_try_dispatch(handler);
 
-	if (bytes_processed == 0) {
-	    /* Only have part of the command to process. */
-	    break;
-	} else if (handler->index > bytes_processed) {
-	    /* Processed the command and there's more data. */
-	    memmove(handler->buffer, &handler->buffer[bytes_processed], handler->index - bytes_processed);
-	    handler->index -= bytes_processed;
-	} else {
-	    /* Processed the whole buffer. */
-	    handler->index = 0;
-	    break;
-	}
+        if (bytes_processed == 0) {
+            /* Only have part of the command to process. */
+            break;
+        } else if (handler->index > bytes_processed) {
+            /* Processed the command and there's more data. */
+            memmove(handler->buffer, &handler->buffer[bytes_processed], handler->index - bytes_processed);
+            handler->index -= bytes_processed;
+        } else {
+            /* Processed the whole buffer. */
+            handler->index = 0;
+            break;
+        }
     }
 }
