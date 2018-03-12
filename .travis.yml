@@ -8,5 +8,7 @@ matrix:
           otp_release: 18.2.1
 
 script:
+    - mix deps.get
     - mix test
+    - mix docs
     - if [[ $TRAVIS_ELIXIR_VERSION = "1.6" ]]; then mix format --check-formatted; fi
