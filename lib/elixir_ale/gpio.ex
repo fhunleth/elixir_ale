@@ -19,10 +19,16 @@ defmodule ElixirALE.GPIO do
   Start and link a new GPIO GenServer. `pin` should be a valid
   GPIO pin number on the system and `pin_direction` should be
   `:input` or `:output`.
+
+  Including `:start_value` in `opts` will explicitly write the
+  GPIO value on start. Expected values are `1`, `0`, `true`, or `false`
+
+      ElixirALE.GPIO.start_link(16, :output, start_value: 1)
   """
   @spec start_link(integer, pin_direction, [term]) :: {:ok, pid}
   def start_link(pin, pin_direction, opts \\ []) do
-    GenServer.start_link(__MODULE__, [pin, pin_direction], opts)
+    {start_value, opts} = Keyword.pop(opts, :start_value)
+    GenServer.start_link(__MODULE__, [pin, pin_direction, start_value], opts)
   end
 
   @doc """
@@ -81,6 +87,26 @@ defmodule ElixirALE.GPIO do
 
     state = %State{port: port, pin: pin, direction: pin_direction}
     {:ok, state}
+  end
+
+  def init([pin, pin_direction, nil]) do
+    init([pin, pin_direction])
+  end
+
+  def init([pin, pin_direction, bool]) when is_boolean(bool) do
+    start_value = if bool, do: 1, else: 0
+    init([pin, pin_direction, start_value])
+  end
+
+  def init([pin, pin_direction, start_value]) when is_integer(start_value) do
+    with {:ok, state} <- init([pin, pin_direction]),
+         :ok <- call_port(state, :write, start_value)
+    do
+      {:ok, state}
+    else
+      {:error, reason} -> {:stop, reason}
+      error -> error
+    end
   end
 
   def handle_call(:read, _from, state) do
