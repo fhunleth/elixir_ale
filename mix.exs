@@ -5,7 +5,7 @@ defmodule ElixirAle.MixProject do
     [
       app: :elixir_ale,
       version: "1.0.3",
-      elixir: "~> 1.2",
+      elixir: "~> 1.6",
       name: "elixir_ale",
       description: description(),
       package: package(),
