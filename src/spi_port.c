@@ -52,8 +52,7 @@
 #error "Please bump the size of ERLCMD_BUF_SIZE to support SPI_TRANSFER_MAX"
 #endif
 
-struct spi_info
-{
+struct spi_info {
     int fd;
 
     struct spi_ioc_transfer transfer;
@@ -103,13 +102,13 @@ static void spi_init(struct spi_info *spi,
 }
 
 /**
- * @brief	spi transfer operation
+ * @brief   spi transfer operation
  *
- * @param	tx      Data to write into the device
- * @param	rx      Data to read from the device
- * @param	len     Length of data
+ * @param   tx      Data to write into the device
+ * @param   rx      Data to read from the device
+ * @param   len     Length of data
  *
- * @return 	1 for success, 0 for failure
+ * @return  1 for success, 0 for failure
  */
 static int spi_transfer(struct spi_info *spi, const char *tx, char *rx, unsigned int len)
 {
@@ -191,7 +190,9 @@ static void spi_handle_request(const char *req, void *cookie)
 int spi_main(int argc, char *argv[])
 {
     if (argc != 7)
-        errx(EXIT_FAILURE, "%s spi <device path> <SPI mode (0-3)> <bits/word (8)> <speed (1000000 Hz)> <delay (10 us)>", argv[0]);
+        errx(EXIT_FAILURE,
+             "%s spi <device path> <SPI mode (0-3)> <bits/word (8)> <speed (1000000 Hz)> <delay (10 us)>",
+             argv[0]);
 
     const char *devpath = argv[2];
     uint8_t mode = (uint8_t) strtoul(argv[3], 0, 0);

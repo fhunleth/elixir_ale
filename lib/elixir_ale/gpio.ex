@@ -100,8 +100,7 @@ defmodule ElixirALE.GPIO do
 
   def init([pin, pin_direction, start_value]) when is_integer(start_value) do
     with {:ok, state} <- init([pin, pin_direction]),
-         :ok <- call_port(state, :write, start_value)
-    do
+         :ok <- call_port(state, :write, start_value) do
       {:ok, state}
     else
       {:error, reason} -> {:stop, reason}

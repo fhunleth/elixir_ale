@@ -94,7 +94,8 @@ static size_t erlcmd_try_dispatch(struct erlcmd *handler)
  */
 void erlcmd_process(struct erlcmd *handler)
 {
-    ssize_t amount_read = read(STDIN_FILENO, handler->buffer + handler->index, sizeof(handler->buffer) - handler->index);
+    ssize_t amount_read = read(STDIN_FILENO, handler->buffer + handler->index,
+                               sizeof(handler->buffer) - handler->index);
     if (amount_read < 0) {
         /* EINTR is ok to get, since we were interrupted by a signal. */
         if (errno == EINTR)

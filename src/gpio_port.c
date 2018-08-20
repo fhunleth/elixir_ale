@@ -81,13 +81,13 @@ int sysfs_write_file(const char *pathname, const char *value)
 // GPIO functions
 
 /**
- * @brief	Open and configure a GPIO
+ * @brief   Open and configure a GPIO
  *
- * @param	pin           The pin structure
- * @param	pin_number    The GPIO pin
+ * @param   pin           The pin structure
+ * @param   pin_number    The GPIO pin
  * @param   dir           Direction of pin (input or output)
  *
- * @return 	1 for success, -1 for failure
+ * @return  1 for success, -1 for failure
  */
 int gpio_init(struct gpio *pin, unsigned int pin_number, enum gpio_state dir)
 {
@@ -142,12 +142,12 @@ int gpio_init(struct gpio *pin, unsigned int pin_number, enum gpio_state dir)
 }
 
 /**
- * @brief	Set pin with the value "0" or "1"
+ * @brief   Set pin with the value "0" or "1"
  *
- * @param	pin           The pin structure
+ * @param   pin           The pin structure
  * @param       value         Value to set (0 or 1)
  *
- * @return 	1 for success, -1 for failure
+ * @return  1 for success, -1 for failure
  */
 int gpio_write(struct gpio *pin, unsigned int val)
 {
@@ -163,11 +163,11 @@ int gpio_write(struct gpio *pin, unsigned int val)
 }
 
 /**
-* @brief	Read the value of the pin
+* @brief    Read the value of the pin
 *
-* @param	pin            The GPIO pin
+* @param    pin            The GPIO pin
 *
-* @return 	The pin value if success, -1 for failure
+* @return   The pin value if success, -1 for failure
 */
 int gpio_read(struct gpio *pin)
 {
@@ -186,8 +186,8 @@ int gpio_read(struct gpio *pin)
  * isr is called whenever the edge specified occurs, receiving as
  * argument the number of the pin which triggered the interrupt.
  *
- * @param   pin	Pin number to attach interrupt to
- * @param   mode	Interrupt mode
+ * @param   pin Pin number to attach interrupt to
+ * @param   mode    Interrupt mode
  *
  * @return  Returns 1 on success.
  */
@@ -252,7 +252,7 @@ void gpio_handle_request(const char *req, void *cookie)
     if (strcmp(cmd, "read") == 0) {
         debug("read");
         int value = gpio_read(pin);
-        if (value !=-1)
+        if (value != -1)
             ei_encode_long(resp, &resp_index, value);
         else {
             ei_encode_tuple_header(resp, &resp_index, 2);
