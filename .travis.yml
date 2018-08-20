@@ -11,5 +11,5 @@ matrix:
 
 script:
     - mix test
-    - mix docs
-    - if [[ $TRAVIS_ELIXIR_VERSION = "1.6" ]]; then mix format --check-formatted; fi
+    - if [[ $TRAVIS_ELIXIR_VERSION = "1.7" ]]; then mix docs; fi
+    - if [[ $TRAVIS_ELIXIR_VERSION = "1.7" ]]; then mix format --check-formatted; fi
