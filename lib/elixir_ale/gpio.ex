@@ -32,6 +32,12 @@ defmodule ElixirALE.GPIO do
   end
 
   @doc """
+  Helper method for reading the pin number that the GPIO GenServer
+  is linked to.
+  """
+  def pin(pid), do: GenServer.call(pid, :pin)
+
+  @doc """
   Free the resources associated with pin and stop the GenServer.
   """
   @spec release(pid) :: :ok
@@ -106,6 +112,10 @@ defmodule ElixirALE.GPIO do
       {:error, reason} -> {:stop, reason}
       error -> error
     end
+  end
+
+  def handle_call(:pin, _from, state) do
+    {:reply, state.pin, state}
   end
 
   def handle_call(:read, _from, state) do
