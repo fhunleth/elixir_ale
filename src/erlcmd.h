@@ -29,8 +29,7 @@
  * extra for the request type information.
  */
 #define ERLCMD_BUF_SIZE (8192 + 128)
-struct erlcmd
-{
+struct erlcmd {
     char buffer[ERLCMD_BUF_SIZE];
     size_t index;
 

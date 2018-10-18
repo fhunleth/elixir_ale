@@ -46,8 +46,7 @@
 #error "Please bump the size of ERLCMD_BUF_SIZE to support I2C_BUFFER_MAX"
 #endif
 
-struct i2c_info
-{
+struct i2c_info {
     int fd;
 };
 
@@ -61,7 +60,7 @@ static void i2c_init(struct i2c_info *i2c, const char *devpath)
 }
 
 /**
- * @brief	I2C combined write/read operation
+ * @brief   I2C combined write/read operation
  *
  * This function can be used to individually read or write
  * bytes across the bus. Additionally, a write and read
@@ -71,12 +70,12 @@ static void i2c_init(struct i2c_info *i2c, const char *devpath)
  * two bytes written.
  *
  * @param addr          the device address
- * @param	to_write	    Optional write buffer
- * @param	to_write_len	Write buffer length
- * @param	to_read	      Optional read buffer
- * @param	to_read_len	  Read buffer length
+ * @param   to_write        Optional write buffer
+ * @param   to_write_len    Write buffer length
+ * @param   to_read       Optional read buffer
+ * @param   to_read_len   Read buffer length
  *
- * @return 	1 for success, 0 for failure
+ * @return  1 for success, 0 for failure
  */
 static int i2c_transfer(const struct i2c_info *i2c,
                         unsigned int addr,
