@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.2.0
+
+* New features
+  * Add `GPIO.pin/1` to get the pin number back. Thanks to @jjcarstens
+  * Add `child_specs/1` to support creating GPIOs in supervisors
+
+* Improvements
+  * Various spec improvements
+
 ## v1.1.0
 
 This release will work with Elixir 1.7. Support for Elixir versions before 1.6 has been dropped.
