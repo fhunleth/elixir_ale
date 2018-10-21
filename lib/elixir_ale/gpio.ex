@@ -6,6 +6,13 @@ defmodule ElixirALE.GPIO do
   independent GenServer.
   """
 
+  def child_spec(opts) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, opts}
+    }
+  end
+
   defmodule State do
     @moduledoc false
     defstruct port: nil, pin: 0, direction: nil, callbacks: []
