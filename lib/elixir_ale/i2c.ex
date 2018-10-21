@@ -34,7 +34,7 @@ defmodule ElixirALE.I2C do
   you're only going to call `read_device/3`, etc., then pass in any number
   for the `i2c_address` here.
   """
-  @spec start_link(binary, i2c_address, [term]) :: {:ok, pid}
+  @spec start_link(binary, i2c_address, [term]) :: GenServer.on_start()
   def start_link(devname, address, opts \\ []) do
     GenServer.start_link(__MODULE__, [devname, address], opts)
   end
@@ -42,7 +42,7 @@ defmodule ElixirALE.I2C do
   @doc """
   Stop the GenServer and release all resources.
   """
-  @spec release(pid) :: :ok
+  @spec release(GenServer.server()) :: :ok
   def release(pid) do
     GenServer.cast(pid, :release)
   end
@@ -50,7 +50,7 @@ defmodule ElixirALE.I2C do
   @doc """
   Initiate a read transaction on the I2C bus of `count` bytes.
   """
-  @spec read(pid, integer) :: binary | {:error, term}
+  @spec read(GenServer.server(), non_neg_integer()) :: binary | {:error, term}
   def read(pid, count) do
     GenServer.call(pid, {:read, count})
   end
@@ -58,7 +58,7 @@ defmodule ElixirALE.I2C do
   @doc """
   Write the specified `data` to the device.
   """
-  @spec write(pid, binary) :: :ok | {:error, term}
+  @spec write(GenServer.server(), binary) :: :ok | {:error, term}
   def write(pid, data) do
     GenServer.call(pid, {:write, data})
   end
@@ -67,7 +67,7 @@ defmodule ElixirALE.I2C do
   Write the specified `data` to the device and then read
   the specified number of bytes.
   """
-  @spec write_read(pid, binary, integer) :: binary | {:error, term}
+  @spec write_read(GenServer.server(), binary, non_neg_integer()) :: binary | {:error, term}
   def write_read(pid, write_data, read_count) do
     GenServer.call(pid, {:wrrd, write_data, read_count})
   end
@@ -76,7 +76,7 @@ defmodule ElixirALE.I2C do
   Initiate a read transaction to the device at the specified `address`. This
   is the same as `read/2` except that an arbitrary device address may be given.
   """
-  @spec read_device(pid, i2c_address, integer) :: binary | {:error, term}
+  @spec read_device(GenServer.server(), i2c_address, non_neg_integer()) :: binary | {:error, term}
   def read_device(pid, address, count) do
     GenServer.call(pid, {:read_device, address, count})
   end
@@ -84,7 +84,7 @@ defmodule ElixirALE.I2C do
   @doc """
   Write the specified `data` to the device at `address`.
   """
-  @spec write_device(pid, i2c_address, binary) :: :ok | {:error, term}
+  @spec write_device(GenServer.server(), i2c_address, binary) :: :ok | {:error, term}
   def write_device(pid, address, data) do
     GenServer.call(pid, {:write_device, address, data})
   end
@@ -94,7 +94,8 @@ defmodule ElixirALE.I2C do
   the specified number of bytes. This is similar to `write_read/3` except
   with an I2C device address.
   """
-  @spec write_read_device(pid, i2c_address, binary, integer) :: binary | {:error, term}
+  @spec write_read_device(GenServer.server(), i2c_address, binary, non_neg_integer()) ::
+          binary | {:error, term}
   def write_read_device(pid, address, write_data, read_count) do
     GenServer.call(pid, {:wrrd_device, address, write_data, read_count})
   end
@@ -110,7 +111,7 @@ defmodule ElixirALE.I2C do
   ["i2c-1"]
   ```
   """
-  @spec device_names() :: [binary]
+  @spec device_names() :: [String.t()]
   def device_names() do
     Path.wildcard("/dev/i2c-*")
     |> Enum.map(fn p -> String.replace_prefix(p, "/dev/", "") end)

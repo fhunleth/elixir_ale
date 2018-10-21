@@ -11,6 +11,8 @@ defmodule ElixirALE.GPIO do
     defstruct port: nil, pin: 0, direction: nil, callbacks: []
   end
 
+  @type pin_number :: non_neg_integer
+  @type pin_value :: 0 | 1 | true | false
   @type pin_direction :: :input | :output
   @type int_direction :: :rising | :falling | :both | :none
 
@@ -25,7 +27,7 @@ defmodule ElixirALE.GPIO do
 
       ElixirALE.GPIO.start_link(16, :output, start_value: 1)
   """
-  @spec start_link(integer, pin_direction, [term]) :: {:ok, pid}
+  @spec start_link(pin_number(), pin_direction, [term]) :: GenServer.on_start()
   def start_link(pin, pin_direction, opts \\ []) do
     {start_value, opts} = Keyword.pop(opts, :start_value)
     GenServer.start_link(__MODULE__, [pin, pin_direction, start_value], opts)
@@ -35,12 +37,13 @@ defmodule ElixirALE.GPIO do
   Helper method for reading the pin number that the GPIO GenServer
   is linked to.
   """
+  @spec pin(GenServer.server()) :: pin_number()
   def pin(pid), do: GenServer.call(pid, :pin)
 
   @doc """
   Free the resources associated with pin and stop the GenServer.
   """
-  @spec release(pid) :: :ok
+  @spec release(GenServer.server()) :: :ok
   def release(pid) do
     GenServer.cast(pid, :release)
   end
@@ -51,7 +54,7 @@ defmodule ElixirALE.GPIO do
   or `true` for logic high. Other non-zero values will result in logic
   high being output.
   """
-  @spec write(pid, 0 | 1 | true | false) :: :ok | {:error, term}
+  @spec write(GenServer.server(), pin_value()) :: :ok | {:error, term}
   def write(pid, value) when is_integer(value) do
     GenServer.call(pid, {:write, value})
   end
@@ -62,7 +65,7 @@ defmodule ElixirALE.GPIO do
   @doc """
   Read the current value of the pin.
   """
-  @spec read(pid) :: 0 | 1 | {:error, term}
+  @spec read(GenServer.server()) :: pin_value() | {:error, term}
   def read(pid) do
     GenServer.call(pid, :read)
   end
@@ -72,7 +75,7 @@ defmodule ElixirALE.GPIO do
   `:rising` transitions, `:falling` transitions, or `:both`. The process
   that calls this method will receive the messages.
   """
-  @spec set_int(pid, int_direction) :: :ok | {:error, term}
+  @spec set_int(GenServer.server(), int_direction) :: :ok | {:error, term}
   def set_int(pid, direction) do
     true = pin_interrupt_condition?(direction)
     GenServer.call(pid, {:set_int, direction, self()})

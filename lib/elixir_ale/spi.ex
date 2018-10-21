@@ -30,7 +30,7 @@ defmodule ElixirALE.SPI do
   ["spidev0.0", "spidev0.1"]
   ```
   """
-  @spec device_names() :: [binary]
+  @spec device_names() :: [String.t()]
   def device_names() do
     Path.wildcard("/dev/spidev*")
     |> Enum.map(fn p -> String.replace_prefix(p, "/dev/", "") end)
@@ -50,7 +50,7 @@ defmodule ElixirALE.SPI do
    * `spi_opts` is a keyword list to configure the bus
    * `opts` are any options to pass to GenServer.start_link
   """
-  @spec start_link(binary, [spi_option], [term]) :: {:ok, pid}
+  @spec start_link(binary, [spi_option], [term]) :: GenServer.on_start()
   def start_link(devname, spi_opts \\ [], opts \\ []) do
     GenServer.start_link(__MODULE__, {devname, spi_opts}, opts)
   end
@@ -58,7 +58,7 @@ defmodule ElixirALE.SPI do
   @doc """
   Stop the GenServer and release the SPI resources.
   """
-  @spec release(pid) :: :ok
+  @spec release(GenServer.server()) :: :ok
   def release(pid) do
     GenServer.cast(pid, :release)
   end
@@ -68,7 +68,7 @@ defmodule ElixirALE.SPI do
   send. Since SPI transfers simultaneously send and receive, the return value
   will be a binary of the same length or an error.
   """
-  @spec transfer(pid, binary) :: binary | {:error, term}
+  @spec transfer(GenServer.server(), binary) :: binary | {:error, term}
   def transfer(pid, data) do
     GenServer.call(pid, {:transfer, data})
   end
