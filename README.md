@@ -290,6 +290,10 @@ platform-dependent way. For ease of maintenance, `elixir_ale` doesn't have any
 platform-dependent code, so supporting it would be difficult. An Elixir PWM
 library would be very interesting, though, should anyone want to implement it.
 
+### Where's 1-wire support?
+
+There is a library available that supports the 1-wire protocol, see [onewire_therm](https://github.com/mokele/onewire_therm).
+
 ### Can I develop code that uses elixir_ale on my laptop?
 
 You'll need to fake out the hardware. Code to do this depends
