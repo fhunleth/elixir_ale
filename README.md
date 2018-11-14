@@ -26,7 +26,7 @@ Elixir library. Normally, you would include elixir_ale as a dependency in your
 
 ```elixir
 def deps do
-  [{:elixir_ale, "~> 1.0"}]
+  [{:elixir_ale, "~> 1.2"}]
 end
 ```
 

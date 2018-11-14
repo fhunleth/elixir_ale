@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.1
+
+* Bug fixes
+  * Fixed incorrect edge notifications when registering for only rising or
+    falling interrupts. Thanks to jsimmons2 for this fix.
+
 ## v1.2.0
 
 * New features
