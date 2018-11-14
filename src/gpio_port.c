@@ -199,7 +199,6 @@ int gpio_set_int(struct gpio *pin, const char *mode)
     if (!sysfs_write_file(path, mode))
         return -1;
     (void)strncpy(pin->edge, mode, sizeof(pin->edge)); /* Remember edge */
-    pin->edge[sizeof(pin->edge) - 1] = '\0';    /* Forcefully terminate */
 
     if (strcmp(mode, "none") == 0)
         pin->state = GPIO_INPUT;
