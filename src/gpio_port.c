@@ -52,6 +52,7 @@ struct gpio {
     enum gpio_state state;
     int fd;
     int pin_number;
+    char edge[8];
 };
 
 /**
@@ -197,6 +198,7 @@ int gpio_set_int(struct gpio *pin, const char *mode)
     sprintf(path, "/sys/class/gpio/gpio%d/edge", pin->pin_number);
     if (!sysfs_write_file(path, mode))
         return -1;
+    (void)strncpy(pin->edge, mode, sizeof(pin->edge)); /* Remember edge */
 
     if (strcmp(mode, "none") == 0)
         pin->state = GPIO_INPUT;
@@ -222,7 +224,10 @@ void gpio_process(struct gpio *pin)
     ei_encode_version(resp, &resp_index);
     ei_encode_tuple_header(resp, &resp_index, 2);
     ei_encode_atom(resp, &resp_index, "gpio_interrupt");
-    ei_encode_atom(resp, &resp_index, value ? "rising" : "falling");
+    if (strcmp(pin->edge, "both") == 0)
+        ei_encode_atom(resp, &resp_index, value ? "rising" : "falling");
+    else
+        ei_encode_atom(resp, &resp_index, pin->edge);
     erlcmd_send(resp, resp_index);
 }
 
@@ -263,7 +268,7 @@ void gpio_handle_request(const char *req, void *cookie)
         long value;
         if (ei_decode_long(req, &req_index, &value) < 0)
             errx(EXIT_FAILURE, "write: didn't get value to write");
-        debug("write %d", value);
+        debug("write %d", (int)value);
         if (gpio_write(pin, value))
             ei_encode_atom(resp, &resp_index, "ok");
         else {
@@ -275,7 +280,7 @@ void gpio_handle_request(const char *req, void *cookie)
         char mode[32];
         if (ei_decode_atom(req, &req_index, mode) < 0)
             errx(EXIT_FAILURE, "set_int: didn't get value");
-        debug("write %s", mode);
+        debug("mode %s", mode);
 
         if (gpio_set_int(pin, mode))
             ei_encode_atom(resp, &resp_index, "ok");
