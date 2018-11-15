@@ -7,6 +7,13 @@
 buses and SPI peripherals on Linux platforms. Internally, it uses the Linux
 sysclass interface so that it does not require platform-dependent code.
 
+NOTE: `elixir_ale` is actively maintained. However, future work is focused on
+`elixir_ale` 2.0 (aka Elixir Circuits). Elixir Circuits is more performant, has
+API naming and return value changes that we couldn't put here, and supports
+features like automatic I2C retries and GPIO pullups/pulldowns on some
+platforms. I2C, SPI and GPIO are split up in 3 repositories. See [Elixir
+Circuits](https://github.com/elixir-circuits/).
+
 `elixir_ale` works great with LEDs, buttons, many kinds of sensors, and simple
 control of motors. In general, if a device requires high speed transactions or
 has hard real-time constraints in its interactions, this is not the right
