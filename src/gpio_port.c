@@ -24,6 +24,7 @@
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -50,6 +51,7 @@ enum gpio_state {
 
 struct gpio {
     enum gpio_state state;
+    bool is_active_low;
     int fd;
     int pin_number;
     char edge[8];
@@ -87,15 +89,17 @@ int sysfs_write_file(const char *pathname, const char *value)
  * @param   pin           The pin structure
  * @param   pin_number    The GPIO pin
  * @param   dir           Direction of pin (input or output)
+ * @param   is_active_low Signal logical value matches physical value, or is inverted (active low)
  *
  * @return  1 for success, -1 for failure
  */
-int gpio_init(struct gpio *pin, unsigned int pin_number, enum gpio_state dir)
+int gpio_init(struct gpio *pin, unsigned int pin_number, enum gpio_state dir, bool is_active_low)
 {
     /* Initialize the pin structure. */
     pin->state = dir;
     pin->fd = -1;
     pin->pin_number = pin_number;
+    pin->is_active_low = is_active_low;
 
     /* Construct the gpio control file paths */
     char direction_path[64];
@@ -104,12 +108,27 @@ int gpio_init(struct gpio *pin, unsigned int pin_number, enum gpio_state dir)
     char value_path[64];
     sprintf(value_path, "/sys/class/gpio/gpio%d/value", pin_number);
 
+    char active_low_path[64];
+    sprintf(active_low_path, "/sys/class/gpio/gpio%d/active_low", pin_number);
+
     /* Check if the gpio has been exported already. */
     if (access(value_path, F_OK) == -1) {
         /* Nope. Export it. */
         char pinstr[64];
         sprintf(pinstr, "%d", pin_number);
         if (!sysfs_write_file("/sys/class/gpio/export", pinstr))
+            return -1;
+    }
+
+    if (access(active_low_path, F_OK) != -1) {
+        const char *active_low_string = is_active_low ? "1" : "0";
+        int retries = 1000;
+        while (!sysfs_write_file(active_low_path, active_low_string) &&
+                retries > 0) {
+            usleep(1000);
+            retries--;
+        }
+        if (retries == 0)
             return -1;
     }
 
@@ -298,11 +317,13 @@ void gpio_handle_request(const char *req, void *cookie)
 
 int gpio_main(int argc, char *argv[])
 {
-    if (argc != 4)
-        errx(EXIT_FAILURE, "%s gpio <pin#> <input|output>", argv[0]);
+    if (argc != 5)
+        errx(EXIT_FAILURE, "%s gpio <pin#> <input|output> <normal|active_low>", argv[0]);
 
     int pin_number = strtol(argv[2], NULL, 0);
     enum gpio_state initial_state;
+    bool is_active_low;
+
     if (strcmp(argv[3], "input") == 0)
         initial_state = GPIO_INPUT;
     else if (strcmp(argv[3], "output") == 0)
@@ -310,9 +331,17 @@ int gpio_main(int argc, char *argv[])
     else
         errx(EXIT_FAILURE, "Specify 'input' or 'output'");
 
+    // active_low
+    if (strcmp(argv[4], "active_low") == 0)
+        is_active_low = true;
+    else if (strcmp(argv[4], "normal") == 0)
+        is_active_low = false;
+    else
+        errx(EXIT_FAILURE, "Specify 'active_low' or 'normal'");
+
     struct gpio pin;
-    if (gpio_init(&pin, pin_number, initial_state) < 0)
-        errx(EXIT_FAILURE, "Error initializing GPIO %d as %s", pin_number, argv[3]);
+    if (gpio_init(&pin, pin_number, initial_state, is_active_low) < 0)
+        errx(EXIT_FAILURE, "Error initializing GPIO %d as %s %s", pin_number, argv[3], argv[4]);
 
     struct erlcmd handler;
     erlcmd_init(&handler, gpio_handle_request, &pin);

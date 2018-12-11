@@ -15,13 +15,14 @@ defmodule ElixirALE.GPIO do
 
   defmodule State do
     @moduledoc false
-    defstruct port: nil, pin: 0, direction: nil, callbacks: []
+    defstruct port: nil, pin: 0, direction: nil, active_low?: false, callbacks: []
   end
 
   @type pin_number :: non_neg_integer
   @type pin_value :: 0 | 1 | true | false
   @type pin_direction :: :input | :output
   @type int_direction :: :rising | :falling | :both | :none
+  @type active_low? :: true | false
 
   # Public API
   @doc """
@@ -29,15 +30,22 @@ defmodule ElixirALE.GPIO do
   GPIO pin number on the system and `pin_direction` should be
   `:input` or `:output`.
 
+  Including `:active_low?` in `opts` will explicitly configure the 
+  GPIO active-low control on start. Expected values are `true` or `false`
+  If set to `true`, then the logical state read and written by this module
+  is inverted from the physical state on the device.
+
   Including `:start_value` in `opts` will explicitly write the
   GPIO value on start. Expected values are `1`, `0`, `true`, or `false`
 
       ElixirALE.GPIO.start_link(16, :output, start_value: 1)
+      ElixirALE.GPIO.start_link(16, :output, active_low?: true, start_value: 0)
   """
   @spec start_link(pin_number(), pin_direction, [term]) :: GenServer.on_start()
   def start_link(pin, pin_direction, opts \\ []) do
+    {active_low?, opts} = Keyword.pop(opts, :active_low?, false)
     {start_value, opts} = Keyword.pop(opts, :start_value)
-    GenServer.start_link(__MODULE__, [pin, pin_direction, start_value], opts)
+    GenServer.start_link(__MODULE__, [pin, pin_direction, active_low?, start_value], opts)
   end
 
   @doc """
@@ -89,33 +97,38 @@ defmodule ElixirALE.GPIO do
   end
 
   # gen_server callbacks
-  def init([pin, pin_direction]) do
+  def init([pin, pin_direction, active_low?]) do
     executable = :code.priv_dir(:elixir_ale) ++ '/ale'
 
     port =
       Port.open({:spawn_executable, executable}, [
-        {:args, ["gpio", "#{pin}", Atom.to_string(pin_direction)]},
+        {:args, ["gpio", "#{pin}", Atom.to_string(pin_direction), (if active_low?, do: "active_low", else: "normal")]},
         {:packet, 2},
         :use_stdio,
         :binary,
         :exit_status
       ])
 
-    state = %State{port: port, pin: pin, direction: pin_direction}
+    state = %State{port: port, pin: pin, direction: pin_direction, active_low?: active_low?}
     {:ok, state}
   end
 
-  def init([pin, pin_direction, nil]) do
-    init([pin, pin_direction])
+  # def init([pin, pin_direction, bool, start_value]) when is_boolean(bool) do
+  #   active_low? = if bool, do: :active_low?, else: :normal
+  #   init([pin, pin_direction, active_low?, start_value])
+  # end
+  
+  def init([pin, pin_direction, active_low?, nil]) do
+    init([pin, pin_direction, active_low?])
   end
 
-  def init([pin, pin_direction, bool]) when is_boolean(bool) do
+  def init([pin, pin_direction, active_low?, bool]) when is_boolean(bool) do
     start_value = if bool, do: 1, else: 0
-    init([pin, pin_direction, start_value])
+    init([pin, pin_direction, active_low?, start_value])
   end
 
-  def init([pin, pin_direction, start_value]) when is_integer(start_value) do
-    with {:ok, state} <- init([pin, pin_direction]),
+  def init([pin, pin_direction, active_low?, start_value]) when is_integer(start_value) do
+    with {:ok, state} <- init([pin, pin_direction, active_low?]),
          :ok <- call_port(state, :write, start_value) do
       {:ok, state}
     else
