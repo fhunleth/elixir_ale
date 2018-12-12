@@ -140,6 +140,49 @@ getting the initial state of the pin and turning on interrupts. Without it,
 you could get the state of the pin, it could change states, and then you could
 start waiting on it for interrupts. If that happened, you would be out of sync.
 
+The logic polarity of the gpio can be set to active-high or active-low via the `:active_low?` option flag.
+Active-high is the standard behaviour, where a logical 1 maps to physical 1.
+Active-low is when the logic is inverted, ie: logical 1 maps to physical 0.
+Interrupts also follow this inversion; a physical transition of 0->1 is a rising edge, but in active-low logic this logically a falling edge.
+
+This is useful as a layer of abstraction from hardware that allows you to think of a signal as true or false regardless of the physical value. 
+Take for example a driver written for hardware device A and B that waits for some signal to be asserted true on a gpio line.
+On device A, the signal is physically 1 when true. On device B, the signal is physically 0 when true.
+The driver shouldn't have to care about the physical value,
+just that the logical value equates to 1.
+Thus by setting up the logic polarity for this pin in a hardware-specific configuration file,
+the core driver code is common to both A and B.
+
+Using the example button with pulldown resistor,
+```elixir
+iex> {:ok, pid} = GPIO.start_link(17, :input, active_low?: true)
+{:ok, #PID<0.155.0>}
+
+# button starts as open.  Physical gpio state is 0, but logically is 1
+iex> GPIO.read(pid)
+1
+
+iex> GPIO.set_int(17, :both)
+:ok
+
+# flush any interrupts caused from setting up interrupts
+iex> flush
+{:gpio_interrupt, 17, :rising}
+:ok
+
+# button is closed.  Physical gpio state is 1, but logically is 0
+iex> GPIO.read(pid)
+0
+
+# button released again.  check the interrupts
+iex> flush
+{:gpio_interrupt, 17, :falling}
+{:gpio_interrupt, 17, :rising}
+:ok
+```
+
+
+
 ## SPI
 
 A [Serial Peripheral Interface](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus)
