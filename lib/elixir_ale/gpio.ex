@@ -15,13 +15,13 @@ defmodule ElixirALE.GPIO do
 
   defmodule State do
     @moduledoc false
-    defstruct port: nil, pin: 0, direction: nil, polarity: :active_high, callbacks: []
+    defstruct port: nil, pin: 0, direction: nil, logic_polarity: nil, callbacks: []
   end
 
   @type pin_number :: non_neg_integer
   @type pin_value :: 0 | 1 | true | false
   @type pin_direction :: :input | :output
-  @type pin_polarity :: :active_low | :active_high
+  @type logic_polarity :: :active_low | :active_high
   @type int_direction :: :rising | :falling | :both | :none
 
   # Public API
@@ -30,26 +30,27 @@ defmodule ElixirALE.GPIO do
   GPIO pin number on the system and `pin_direction` should be
   `:input` or `:output`.
 
-  Including `:active_low?` in `opts` will explicitly configure the 
+  Including `:active_low?` in `opts` will explicitly configure the
   GPIO logic polarity on startup. Expected values are `true` or `false`.
-  If set to `true`, then the polarity is set to `:active_low`. 
-  If set to `false`, then the polarity is set to `:active_high` (default). 
+  If set to `true`, then the polarity is set to `:active_low`.
+  If set to `false`, then the polarity is set to `:active_high` (default).
   Note that in :active_low polarity, the logical state read and written
-  by this module is inverted from the physical state on the pin.  
+  by this module is inverted from the physical state on the pin.
   Interrupt polling follows the logical state.
 
+      ElixirALE.GPIO.start_link(16, :output, active_low?: true)
+
   Including `:start_value` in `opts` will explicitly write the
-  GPIO value on start. Expected values are `1`, `0`, `true`, or `false`
+  GPIO logical value on start. Expected values are `1`, `0`, `true`, or `false`
 
       ElixirALE.GPIO.start_link(16, :output, start_value: 1)
-      ElixirALE.GPIO.start_link(16, :output, active_low?: true, start_value: 0)
   """
   @spec start_link(pin_number(), pin_direction, [term]) :: GenServer.on_start()
   def start_link(pin, pin_direction, opts \\ []) do
     {active_low?, opts} = Keyword.pop(opts, :active_low?, false)
     {start_value, opts} = Keyword.pop(opts, :start_value)
-    pin_polarity = if active_low?, do: :active_low, else: :active_high
-    GenServer.start_link(__MODULE__, [pin, pin_direction, pin_polarity, start_value], opts)
+    logic_polarity = if active_low?, do: :active_low, else: :active_high
+    GenServer.start_link(__MODULE__, [pin, pin_direction, logic_polarity, start_value], opts)
   end
 
   @doc """
@@ -62,8 +63,8 @@ defmodule ElixirALE.GPIO do
   @doc """
   Helper method for reading the logic polarity of this GPIO.
   """
-  @spec polarity(GenServer.server()) :: pin_polarity()
-  def polarity(pid), do: GenServer.call(pid, :polarity)
+  @spec logic_polarity(GenServer.server()) :: logic_polarity()
+  def logic_polarity(pid), do: GenServer.call(pid, :logic_polarity)
 
   @doc """
   Free the resources associated with pin and stop the GenServer.
@@ -97,11 +98,11 @@ defmodule ElixirALE.GPIO do
 
   @doc """
   Turn on "interrupts" on the input pin. The pin's logical state can be
-  monitored for `:rising` transitions, `:falling` transitions, or `:both`. 
+  monitored for `:rising` transitions, `:falling` transitions, or `:both`.
   The process that calls this method will receive the messages.
 
-  If the pin polarity is configured as `:active_low`, then the polarity
-  of these logical edges will be inverted from the physical edges.
+  If the logic polarity is configured as `:active_low`, then
+  the logical edges will be inverted from the physical edges.
   (ie: logical :rising -> physical :falling)
   """
   @spec set_int(GenServer.server(), int_direction) :: :ok | {:error, term}
@@ -111,33 +112,33 @@ defmodule ElixirALE.GPIO do
   end
 
   # gen_server callbacks
-  def init([pin, pin_direction, pin_polarity]) do
+  def init([pin, pin_direction, logic_polarity]) do
     executable = :code.priv_dir(:elixir_ale) ++ '/ale'
 
     port =
       Port.open({:spawn_executable, executable}, [
-        {:args, ["gpio", "#{pin}", Atom.to_string(pin_direction), Atom.to_string(pin_polarity)]},
+        {:args, ["gpio", "#{pin}", Atom.to_string(pin_direction), Atom.to_string(logic_polarity)]},
         {:packet, 2},
         :use_stdio,
         :binary,
         :exit_status
       ])
 
-    state = %State{port: port, pin: pin, direction: pin_direction, polarity: pin_polarity}
+    state = %State{port: port, pin: pin, direction: pin_direction, logic_polarity: logic_polarity}
     {:ok, state}
   end
 
-  def init([pin, pin_direction, pin_polarity, nil]) do
-    init([pin, pin_direction, pin_polarity])
+  def init([pin, pin_direction, logic_polarity, nil]) do
+    init([pin, pin_direction, logic_polarity])
   end
 
-  def init([pin, pin_direction, pin_polarity, bool]) when is_boolean(bool) do
+  def init([pin, pin_direction, logic_polarity, bool]) when is_boolean(bool) do
     start_value = if bool, do: 1, else: 0
-    init([pin, pin_direction, pin_polarity, start_value])
+    init([pin, pin_direction, logic_polarity, start_value])
   end
 
-  def init([pin, pin_direction, pin_polarity, start_value]) when is_integer(start_value) do
-    with {:ok, state} <- init([pin, pin_direction, pin_polarity]),
+  def init([pin, pin_direction, logic_polarity, start_value]) when is_integer(start_value) do
+    with {:ok, state} <- init([pin, pin_direction, logic_polarity]),
          :ok <- call_port(state, :write, start_value) do
       {:ok, state}
     else
@@ -150,8 +151,8 @@ defmodule ElixirALE.GPIO do
     {:reply, state.pin, state}
   end
 
-  def handle_call(:polarity, _from, state) do
-    {:reply, state.polarity, state}
+  def handle_call(:logic_polarity, _from, state) do
+    {:reply, state.logic_polarity, state}
   end
 
   def handle_call(:read, _from, state) do
